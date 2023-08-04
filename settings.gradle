@@ -1,0 +1,24 @@
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
+pluginManagement {
+    repositories {
+        //对应google()
+        maven {url 'https://maven.aliyun.com/repository/google'}
+        //对应jcenter()
+        maven {url 'https://maven.aliyun.com/repository/jcenter'}
+        //共同库
+        maven {url 'https://maven.aliyun.com/repository/public'}
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        maven {url 'https://maven.aliyun.com/repository/google'}
+        //对应jcenter()
+        maven {url 'https://maven.aliyun.com/repository/jcenter'}
+        //共同库
+        maven {url 'https://maven.aliyun.com/repository/public'}
+    }
+}
+rootProject.name = "HuaJunMusic"
+include ':app'
