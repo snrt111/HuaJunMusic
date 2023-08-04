@@ -1,0 +1,46 @@
+package com.snrt.helloworld.util;
+
+
+import android.app.Activity;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+public class PermissionUtil {
+    private final static String TAG = "PermissionUtil";
+
+    // 检查某个权限。返回true表示已启用该权限，返回false表示未启用该权限
+    public static boolean checkPermission(Activity act, String permission) {
+        return checkPermission(act, new String[]{permission});
+    }
+
+    // 检查多个权限。返回true表示已完全启用权限，返回false表示未完全启用权限
+    public static boolean checkPermission(Activity act, String[] permissions) {
+        // 通过权限数组检查是否都开启了这些权限
+        for (String permission : permissions) {
+            int check = ContextCompat.checkSelfPermission(act, permission);
+            if (check != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // 检查权限结果数组，返回true表示都已经获得授权。返回false表示至少有一个未获得授权
+    public static boolean checkGrant(int[] grantResults) {
+        boolean result = true;
+        if (grantResults != null) {
+            // 遍历权限结果数组中的每条选择结果
+            for (int grant : grantResults) {
+                if (grant != PackageManager.PERMISSION_GRANTED) { // 未获得授权
+                    result = false;
+                }
+            }
+        } else {
+            result = false;
+        }
+        return result;
+    }
+
+}
