@@ -92,12 +92,7 @@ public class MainActivity extends AppCompatActivity {
         handlerMap.put(R.id.music, new MusicHandler(this));
         handlerMap.put(R.id.video, new VideoHandler(this));
         handlerMap.put(R.id.game, () -> startActivity(new Intent(this, GameActivity.class)));
-        handlerMap.put(R.id.map, () -> {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("https://chat-shared2.zhile.io/"));
-                    startActivity(intent);
-                }
-        );
+        handlerMap.put(R.id.map, () -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://chat-shared2.zhile.io/"))));
     }
 
     @Override
