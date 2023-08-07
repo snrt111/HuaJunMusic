@@ -9,14 +9,26 @@
         tools:context=".music.MusicActivity">
 
     <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_marginTop="80dp"
+            android:layout_height="80dp">
+        <com.snrt.helloworld.music.SpectrumView
+                android:id="@+id/spectrumView"
+                android:layout_gravity="center_horizontal"
+                android:layout_width="180dp"
+                android:layout_height="match_parent"/>s
+
+    </LinearLayout>
+    <LinearLayout
             android:layout_weight="3"
             android:gravity="center"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
         <com.snrt.helloworld.music.CycleImageView
                 android:id="@+id/music_pic"
-                android:layout_width="300dp"
-                android:layout_height="300dp"
+                android:layout_width="260dp"
+                android:layout_height="260dp"
                 android:layout_centerHorizontal="true"
                 android:src="@drawable/daolang"
         />

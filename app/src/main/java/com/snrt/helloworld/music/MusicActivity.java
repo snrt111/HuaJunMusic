@@ -5,6 +5,7 @@ import android.content.ContentUris;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.audiofx.Visualizer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -30,6 +31,7 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
     private Button playOrPause;
     private ImageView imageView;
     private ObjectAnimator objectAnimator;
+    private Visualizer visualizer;
 
 
     @Override
@@ -46,8 +48,11 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mediaPlayer.setLooping(true);
+        initVisualizer();
+        initImageView();
+    }
 
-        //
+    private void initImageView() {
         imageView = findViewById(R.id.music_pic);
         objectAnimator = ObjectAnimator.ofFloat(imageView, "rotation", 0.0f, 360.0f);
         objectAnimator.setDuration(5000);
@@ -55,6 +60,30 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
         objectAnimator.setRepeatMode(ObjectAnimator.RESTART);
         objectAnimator.setInterpolator(new LinearInterpolator());
     }
+
+    private void initVisualizer() {
+        SpectrumView spectrumView = findViewById(R.id.spectrumView); // Assuming you have a SpectrumView in your layout
+        visualizer = new Visualizer(mediaPlayer.getAudioSessionId());
+        visualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[0]);
+        visualizer.setDataCaptureListener(
+                new Visualizer.OnDataCaptureListener() {
+                    @Override
+                    public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
+                        // Waveform data capture callback
+                    }
+
+                    @Override
+                    public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
+                        // FFT data capture callback
+                        spectrumView.updateFFTData(fft); // Update the SpectrumView with FFT data
+                    }
+                },
+                Visualizer.getMaxCaptureRate() / 2, true, true
+        );
+
+        visualizer.setEnabled(true);
+    }
+
 
     private void initData() {
         Intent intent = getIntent();
@@ -70,6 +99,7 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
             mediaPlayer.reset();
             mediaPlayer.setDataSource(MusicActivity.this, uri);
             mediaPlayer.prepare();
+
             this.mediaPlayer.start();
             this.playOrPause.setText(R.string.pause);
             this.objectAnimator.start();
@@ -109,6 +139,9 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
         super.onDestroy();
         this.mediaPlayer.release();
         this.mediaPlayer = null;
+        if (this.visualizer != null) {
+            this.visualizer.release();
+        }
     }
 
     @Override
