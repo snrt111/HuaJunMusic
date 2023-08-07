@@ -1,15 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="CustomDialog" parent="Theme.AppCompat.Light.Dialog">
-        <item name="android:windowBackground">@drawable/dialog_background</item>
-    </style>
-
-
-    <style name="CustomDialogWithBorder" parent="Theme.AppCompat.Dialog">
-        <item name="android:windowBackground">@drawable/dialog_with_border_background</item>
-        <item name="android:windowMinWidthMajor">80%</item> <!-- 调整宽度 -->
-        <item name="android:windowMinWidthMinor">80%</item> <!-- 调整宽度 -->
+    <style name="Widget.Theme.HelloWorld.MyView" parent="">
+        <item name="android:background">@color/gray_400</item>
     </style>
 </resources>
-
-
