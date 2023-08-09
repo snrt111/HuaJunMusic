@@ -30,7 +30,7 @@ public class SpectrumView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if(fftData.length == 0) {
+        if (fftData.length == 0) {
             return;
         }
         show(canvas);
@@ -63,9 +63,9 @@ public class SpectrumView extends View {
     private void show3(Canvas canvas) {
         int width = getWidth();
         int height = getHeight();
-        int barWidth = width / (fftData.length*2);
+        int barWidth = width / (fftData.length * 2);
 
-        for (int i = 0; i < fftData.length*2; i++) {
+        for (int i = 0; i < fftData.length * 2; i++) {
             int value = fftData[i] + 128; // Adjust the value for visualization
             float barHeight = value * height / 128.0f;
 
@@ -94,9 +94,9 @@ public class SpectrumView extends View {
     private void show1(Canvas canvas) {
         int width = getWidth();
         int height = getHeight();
-        int barWidth = width / fftData.length;
+        int barWidth = (width / fftData.length) / 2;
 
-        for (int i = 0; i < fftData.length; i++) {
+        for (int i = 0; i < fftData.length; i += 2) {
             int value = fftData[i] + 128; // Adjust the value for visualization
             float barHeight = value * height / 256.0f;
 
@@ -112,24 +112,22 @@ public class SpectrumView extends View {
     private void show(Canvas canvas) {
         int width = getWidth();
         int height = getHeight();
-        int barWidth = width / fftData.length * 2 ;
+        int barWidth = width / (fftData.length / 32);
 
-        for (int i = 0; i < fftData.length; i++) {
-            int value = Math.abs(fftData[i]) + 128; // Take absolute value and adjust for visualization
-            float barHeight = value * height / 256.0f;
+        // 处理FFT数据并更新频谱视图
+        float[] magnitudes = new float[fftData.length / 4];
+        for (int i = 0; i < magnitudes.length; i++) {
+            magnitudes[i] = (float) Math.hypot(fftData[2 * i], fftData[2 * i + 1]);
+        }
 
-            // Set a gradient color based on the value
-            int startColor = Color.HSVToColor(new float[]{(float) value * 2, 1.0f, 1.0f});
-            int endColor = Color.HSVToColor(new float[]{(float) value * 2, 0.5f, 1.0f});
-            Shader shader = new LinearGradient(0, 0, 0, barHeight, startColor, endColor, Shader.TileMode.CLAMP);
-            paint.setShader(shader);
+        for (int i = 0; i < 32; i++) {
+            float startX = i * barWidth;
+            float startY = height;
+            float endX = (i + 1) * barWidth - (barWidth / 2);
+            float endY = height - magnitudes[i];
 
-            float left = i * barWidth;
-            float top = height - barHeight;
-            float right = left + barWidth;
-            float bottom = height;
-
-            canvas.drawRect(left, top, right, bottom, paint);
+            canvas.drawRect(startX, startY, endX, endY, paint);
         }
     }
+
 }

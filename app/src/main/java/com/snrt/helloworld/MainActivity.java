@@ -17,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import com.snrt.helloworld.game.GameActivity;
+import com.snrt.helloworld.music.FireCircleActivity;
 import com.snrt.helloworld.music.MusicHandler;
 import com.snrt.helloworld.util.PermissionUtil;
 import com.snrt.helloworld.video.VideoHandler;
@@ -93,12 +94,7 @@ public class MainActivity extends AppCompatActivity {
         handlerMap.put(R.id.music, new MusicHandler(this));
         handlerMap.put(R.id.video, new VideoHandler(this));
         handlerMap.put(R.id.game, () -> startActivity(new Intent(this, GameActivity.class)));
-        handlerMap.put(R.id.map, () -> {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("https://chat-shared2.zhile.io/"));
-                    startActivity(intent);
-                }
-        );
+        handlerMap.put(R.id.map, () -> startActivity(new Intent(this, FireCircleActivity.class)));
     }
 
     @Override

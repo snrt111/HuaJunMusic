@@ -15,11 +15,16 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import com.snrt.helloworld.Handler;
 import com.snrt.helloworld.R;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MusicActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -32,6 +37,12 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
     private ImageView imageView;
     private ObjectAnimator objectAnimator;
     private Visualizer visualizer;
+    private SpectrumView fireCircleView;
+    private SeekBar durationBar;
+    private TextView allTime;
+    private TextView nowTime;
+
+    private boolean isSeekBarChanging;//互斥变量，防止进度条与定时器冲突。
 
 
     @Override
@@ -46,8 +57,32 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
 
     private void initView() {
         mediaPlayer = new MediaPlayer();
+        durationBar = findViewById(R.id.duration_seekBar);
+        allTime = findViewById(R.id.all_time);
+        nowTime = findViewById(R.id.now_time);
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mediaPlayer.setLooping(true);
+        mediaPlayer.setOnPreparedListener(mp -> {
+
+        });
+
+        durationBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//                mediaPlayer.seekTo(seekBar.getProgress());
+//                nowTime.setText(showTime(progress));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isSeekBarChanging = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                isSeekBarChanging = false;
+            }
+        });
         initVisualizer();
         initImageView();
     }
@@ -62,9 +97,10 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void initVisualizer() {
-        SpectrumView spectrumView = findViewById(R.id.spectrumView); // Assuming you have a SpectrumView in your layout
+        // Assuming you have a SpectrumView in your layout
+        fireCircleView = findViewById(R.id.spectrumView);
         visualizer = new Visualizer(mediaPlayer.getAudioSessionId());
-        visualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[0]);
+        visualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
         visualizer.setDataCaptureListener(
                 new Visualizer.OnDataCaptureListener() {
                     @Override
@@ -75,10 +111,10 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
                     @Override
                     public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
                         // FFT data capture callback
-                        spectrumView.updateFFTData(fft); // Update the SpectrumView with FFT data
+                        fireCircleView.updateFFTData(fft); // Update the SpectrumView with FFT data
                     }
                 },
-                Visualizer.getMaxCaptureRate() / 2, true, true
+                Visualizer.getMaxCaptureRate() / 2, false, true
         );
 
         visualizer.setEnabled(true);
@@ -104,9 +140,32 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
             this.playOrPause.setText(R.string.pause);
             this.objectAnimator.start();
 
+            durationBar.setMax(mediaPlayer.getDuration());
+            allTime.setText(showTime(mediaPlayer.getDuration()));
+            //监听播放时回调函数
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if(!isSeekBarChanging){
+                        int currentPosition = mediaPlayer.getCurrentPosition();
+                        durationBar.setProgress(currentPosition);
+                    }
+                }
+            },0,100);
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String showTime(int time){
+        time/=1000;
+        int minute = time/60;
+        int hour = minute/60;
+        int secode = time%60;
+        minute %=60;
+        return String.format("%02d:%02d", minute, secode);
     }
 
 
