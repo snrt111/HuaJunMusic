@@ -45,7 +45,7 @@
                   android:layout_height="wrap_content"
                 android:textColor="@color/white"
                 android:gravity="center_vertical"
-                android:visibility="gone"
+                android:visibility="visible"
                 android:text="02:30"
         />
         <SeekBar
@@ -55,6 +55,9 @@
                 android:max="100"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
+                android:maxHeight="4dp"
+                android:minHeight="4dp"
+                style="@style/CustomSeekBar"
                 android:layout_weight="1"
                 android:progress="0"/>
         <TextView
@@ -75,34 +78,37 @@
             android:layout_weight="1"
     >
 
-        <Button
+        <ImageButton
                 android:id="@+id/btn_prev"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:gravity="center_horizontal|center_vertical"
                 android:layout_marginRight="40dp"
                 android:background="@drawable/circle_button"
-                android:text="&lt;"/>
+                android:src="@drawable/ic_media_previous"
+                />
 
-        <com.google.android.material.button.MaterialButton
+        <ImageButton
                 android:id="@+id/btn_play"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
                 app:cornerRadius="50dp"
                 android:insetLeft="0dp"
                 android:insetTop="0dp"
+                android:paddingLeft="10dp"
                 android:insetRight="0dp"
                 android:insetBottom="0dp"
-                android:text="@string/play"/>
+                android:background="@drawable/ic_media_play"/>
 
-        <Button
+        <ImageButton
                 android:id="@+id/btn_next"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:gravity="center_horizontal|center_vertical"
                 android:background="@drawable/circle_button"
                 android:layout_marginLeft="40dp"
-                android:text="&gt;"/>
+                android:src="@drawable/ic_media_next"
+                />
 
     </LinearLayout>
 </LinearLayout>

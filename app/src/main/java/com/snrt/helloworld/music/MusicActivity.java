@@ -12,13 +12,11 @@ import android.provider.MediaStore;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
-import android.view.animation.RotateAnimation;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-import com.snrt.helloworld.Handler;
 import com.snrt.helloworld.R;
 
 import java.io.IOException;
@@ -31,9 +29,9 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
     private MediaPlayer mediaPlayer;
     private List<MusicVO> musics;
     private int position;
-    private Button prev;
-    private Button next;
-    private Button playOrPause;
+    private ImageButton prev;
+    private ImageButton next;
+    private ImageButton playOrPause;
     private ImageView imageView;
     private ObjectAnimator objectAnimator;
     private Visualizer visualizer;
@@ -69,6 +67,9 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
         durationBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(!isSeekBarChanging) {
+                    nowTime.setText(showTime(progress));
+                }
 //                mediaPlayer.seekTo(seekBar.getProgress());
 //                nowTime.setText(showTime(progress));
             }
@@ -80,6 +81,8 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                mediaPlayer.seekTo(seekBar.getProgress());
+                nowTime.setText(showTime(mediaPlayer.getCurrentPosition()));
                 isSeekBarChanging = false;
             }
         });
@@ -137,22 +140,25 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
             mediaPlayer.prepare();
 
             this.mediaPlayer.start();
-            this.playOrPause.setText(R.string.pause);
+            this.playOrPause.setBackgroundResource(R.drawable.ic_media_pause);
             this.objectAnimator.start();
 
             durationBar.setMax(mediaPlayer.getDuration());
             allTime.setText(showTime(mediaPlayer.getDuration()));
+            nowTime.setText(showTime(mediaPlayer.getCurrentPosition()));
             //监听播放时回调函数
             Timer timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     if(!isSeekBarChanging){
-                        int currentPosition = mediaPlayer.getCurrentPosition();
-                        durationBar.setProgress(currentPosition);
+                        if(mediaPlayer != null && mediaPlayer.isPlaying()) {
+                            int currentPosition = mediaPlayer.getCurrentPosition();
+                            durationBar.setProgress(currentPosition);
+                        }
                     }
                 }
-            },0,100);
+            },0,200);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -181,14 +187,14 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
 
     private void musicPlay() {
         this.mediaPlayer.start();
-        this.playOrPause.setText(R.string.pause);
+        this.playOrPause.setBackgroundResource(R.drawable.ic_media_pause);
         this.objectAnimator.resume();
     }
 
     private void musicPause() {
         if (this.mediaPlayer.isPlaying()) {
             this.mediaPlayer.pause();
-            this.playOrPause.setText(R.string.play);
+            this.playOrPause.setBackgroundResource(R.drawable.ic_media_play);
             this.objectAnimator.pause();
         }
     }

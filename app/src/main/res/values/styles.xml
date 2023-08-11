@@ -13,4 +13,9 @@
         <item name="android:windowMinWidthMajor">80%</item> <!-- 调整宽度 -->
         <item name="android:windowMinWidthMinor">80%</item> <!-- 调整宽度 -->
     </style>
+
+    <style name="CustomSeekBar">
+        <item name="android:progressDrawable">@drawable/custom_seekbar_progress</item>
+<!--        <item name="android:thumb">@drawable/custom_seekbar_thumb</item>-->
+    </style>
 </resources>
