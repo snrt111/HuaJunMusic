@@ -53,6 +53,9 @@ public class LyricView extends TextView {
         for (int i = 0; i < lyrics.size(); i++) {
             LyricParser.LyricLine lyric = lyrics.get(i);
             float textWidth = textPaint.measureText(lyric.getContent());
+            if (i == currentLyricIndex) {
+                textWidth = highlightPaint.measureText(lyric.getContent());
+            }
             float x = (getWidth() - textWidth) / 2;
             float y = centerY + (i - currentLyricIndex) * LINE_HEIGHT;
 
