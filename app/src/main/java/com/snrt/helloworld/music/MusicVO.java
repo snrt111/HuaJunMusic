@@ -7,13 +7,20 @@ import java.util.Objects;
 
 public class MusicVO implements Serializable {
 
-    private Long id;
+    private String id;
     private Uri uri;
-    private  String name;
-    private  Long duration;
-    private  Long size;
 
-    public MusicVO(Long id, String name, Long duration, Long size) {
+    private String url;
+    private  String name;
+    private  String duration;
+    private  String size;
+
+    private String lyric;
+
+    public MusicVO() {
+    }
+
+    public MusicVO(String id, String name, String duration, String size) {
         this.id = id;
         this.name = name;
         this.duration = duration;
@@ -23,10 +30,13 @@ public class MusicVO implements Serializable {
     @Override
     public String toString() {
         return "MusicVO{" +
-                "uri=" + uri +
+                "id='" + id + '\'' +
+                ", uri=" + uri +
+                ", url='" + url + '\'' +
                 ", name='" + name + '\'' +
-                ", duration=" + duration +
-                ", size=" + size +
+                ", duration='" + duration + '\'' +
+                ", size='" + size + '\'' +
+                ", lyric='" + lyric + '\'' +
                 '}';
     }
 
@@ -46,19 +56,19 @@ public class MusicVO implements Serializable {
         this.name = name;
     }
 
-    public Long getDuration() {
+    public String getDuration() {
         return duration;
     }
 
-    public void setDuration(Long duration) {
+    public void setDuration(String duration) {
         this.duration = duration;
     }
 
-    public Long getSize() {
+    public String getSize() {
         return size;
     }
 
-    public void setSize(Long size) {
+    public void setSize(String size) {
         this.size = size;
     }
 
@@ -75,11 +85,29 @@ public class MusicVO implements Serializable {
         return Objects.hash(name, duration, size);
     }
 
-    public Long getId() {
+
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
+    }
+
+    public String getLyric() {
+        return lyric;
+    }
+
+    public void setLyric(String lyric) {
+        this.lyric = lyric;
     }
 }

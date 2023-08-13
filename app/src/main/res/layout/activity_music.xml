@@ -9,106 +9,148 @@
         tools:context=".music.MusicActivity">
 
     <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+    >
+        <TextView
+                android:id="@+id/song_name"
+                android:layout_width="wrap_content"
+                android:textSize="28dp"
+                android:textColor="@color/white"
+                android:text="@string/music"
+                android:layout_height="wrap_content"/>
+    </LinearLayout>
+    <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_marginTop="80dp"
             android:layout_height="80dp">
+
         <com.snrt.helloworld.music.SpectrumView
                 android:id="@+id/spectrumView"
                 android:layout_gravity="center_horizontal"
                 android:layout_width="260dp"
-                android:layout_height="match_parent"/>s
+                android:layout_height="match_parent"/>
 
     </LinearLayout>
     <LinearLayout
-            android:layout_weight="3"
-            android:gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        <com.snrt.helloworld.music.CycleImageView
-                android:id="@+id/music_pic"
-                android:layout_width="260dp"
-                android:layout_height="260dp"
-                android:layout_centerHorizontal="true"
-                android:src="@drawable/daolang"
-                android:visibility="visible"
-        />
-    </LinearLayout>
-    <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_marginLeft="15dp"
-            android:layout_marginRight="15dp"
-            android:layout_height="wrap_content">
-        <TextView
-                android:id="@+id/now_time"
-                android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:gravity="center_vertical"
-                android:visibility="visible"
-                android:text="02:30"
-        />
-        <SeekBar
-                android:id="@+id/duration_seekBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="100"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
-                android:maxHeight="4dp"
-                android:minHeight="4dp"
-                style="@style/CustomSeekBar"
-                android:layout_weight="1"
-                android:progress="0"/>
-        <TextView
-                android:id="@+id/all_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:gravity="center_vertical"
-                android:text="02:30"
-        />
-    </LinearLayout>
-
-    <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="80dp"
-            android:orientation="horizontal"
-            android:gravity="center"
             android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <LinearLayout
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            <com.snrt.helloworld.music.CycleImageView
+                    android:id="@+id/music_pic"
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
+                    android:layout_gravity="center_horizontal"
+                    android:src="@drawable/daolang"
+                    android:visibility="visible"
+            />
+        </LinearLayout>
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            <com.snrt.helloworld.music.LyricView
+                    android:id="@+id/lyric_view"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:layout_centerHorizontal="true"
+            />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:orientation="vertical"
+            android:gravity="center|bottom"
     >
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:orientation="horizontal"
+                android:layout_height="30dp">
+            <TextView
+                    android:id="@+id/now_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:gravity="center_vertical"
+                    android:visibility="visible"
+                    android:text="02:30"
+            />
+            <SeekBar
+                    android:id="@+id/duration_seekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="100"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:maxHeight="4dp"
+                    android:minHeight="4dp"
+                    style="@style/CustomSeekBar"
+                    android:layout_weight="1"
+                    android:progress="0"/>
+            <TextView
+                    android:id="@+id/all_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:gravity="center_vertical"
+                    android:text="02:30"
+            />
+        </LinearLayout>
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:gravity="center_horizontal"
+                android:layout_height="wrap_content">
 
-        <ImageButton
-                android:id="@+id/btn_prev"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:gravity="center_horizontal|center_vertical"
-                android:layout_marginRight="40dp"
-                android:background="@drawable/circle_button"
-                android:src="@drawable/ic_media_previous"
-                />
+            <ImageButton
+                    android:id="@+id/btn_prev"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginRight="40dp"
+                    android:background="@drawable/circle_button"
+                    android:src="@drawable/ic_media_previous"
+            />
 
-        <ImageButton
-                android:id="@+id/btn_play"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                app:cornerRadius="50dp"
-                android:insetLeft="0dp"
-                android:insetTop="0dp"
-                android:paddingLeft="10dp"
-                android:insetRight="0dp"
-                android:insetBottom="0dp"
-                android:background="@drawable/ic_media_play"/>
+            <ImageButton
+                    android:id="@+id/btn_play"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    app:cornerRadius="50dp"
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:paddingLeft="10dp"
+                    android:insetRight="0dp"
+                    android:insetBottom="0dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/ic_media_play"/>
 
-        <ImageButton
-                android:id="@+id/btn_next"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:gravity="center_horizontal|center_vertical"
-                android:background="@drawable/circle_button"
-                android:layout_marginLeft="40dp"
-                android:src="@drawable/ic_media_next"
-                />
+            <ImageButton
+                    android:id="@+id/btn_next"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/circle_button"
+                    android:layout_marginLeft="40dp"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_media_next"
+            />
+        </LinearLayout>
+
 
     </LinearLayout>
 </LinearLayout>

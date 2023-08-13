@@ -19,6 +19,7 @@ import androidx.core.app.ActivityCompat;
 import com.snrt.helloworld.game.GameActivity;
 import com.snrt.helloworld.music.FireCircleActivity;
 import com.snrt.helloworld.music.MusicHandler;
+import com.snrt.helloworld.util.HttpUtil;
 import com.snrt.helloworld.util.PermissionUtil;
 import com.snrt.helloworld.video.VideoHandler;
 

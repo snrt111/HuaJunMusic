@@ -46,7 +46,7 @@ class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         MusicVO music = this.data.get(position);
         myHolder.icon.setImageResource(R.drawable.music);
         myHolder.name.setText(music.getName());
-        Long time = music.getDuration();
+        Long time = Long.valueOf(music.getDuration());
         DateFormat dateFormat = new SimpleDateFormat("mm:ss");
         String format = dateFormat.format(new Date(time));
         Log.e(TAG, "onBindViewHolder: " + time);

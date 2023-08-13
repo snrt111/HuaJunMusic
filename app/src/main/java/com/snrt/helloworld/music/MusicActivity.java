@@ -39,8 +39,11 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
     private SeekBar durationBar;
     private TextView allTime;
     private TextView nowTime;
+    private TextView songName;
+    private Timer timer = null;
 
     private boolean isSeekBarChanging;//互斥变量，防止进度条与定时器冲突。
+    private LyricView lyricView;
 
 
     @Override
@@ -53,25 +56,110 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
         startPlay();
     }
 
+
     private void initView() {
+        playOrPause = findViewById(R.id.btn_play);
+        prev = findViewById(R.id.btn_prev);
+        next = findViewById(R.id.btn_next);
         mediaPlayer = new MediaPlayer();
         durationBar = findViewById(R.id.duration_seekBar);
+        songName = findViewById(R.id.song_name);
         allTime = findViewById(R.id.all_time);
         nowTime = findViewById(R.id.now_time);
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mediaPlayer.setLooping(true);
-        mediaPlayer.setOnPreparedListener(mp -> {
+        fireCircleView = findViewById(R.id.spectrumView);
+        lyricView = findViewById(R.id.lyric_view);
+        imageView = findViewById(R.id.music_pic);
+        objectAnimator = ObjectAnimator.ofFloat(imageView, "rotation", 0.0f, 360.0f);
+        objectAnimator.setDuration(5000);
+        objectAnimator.setRepeatCount(Animation.INFINITE);
+        objectAnimator.setRepeatMode(ObjectAnimator.RESTART);
+        objectAnimator.setInterpolator(new LinearInterpolator());
+        setPrevAndNext();
+    }
 
+    private void initData() {
+        Intent intent = getIntent();
+        musics = (List<MusicVO>) intent.getSerializableExtra("data");
+        position = intent.getIntExtra("position", 0);
+    }
+
+
+    private void startPlay() {
+        try {
+            MusicVO currentMusic = musics.get(position);
+            String url = currentMusic.getUrl();
+            songName.setText(currentMusic.getName());
+            lyricView.setLyrics(LyricParser.parseLyrics(currentMusic.getLyric()));
+            if(url != null && url !="") {
+
+                mediaPlayer.reset();
+                mediaPlayer.setDataSource(url);
+                mediaPlayer.prepare();
+            } else {
+
+                Uri uri = ContentUris.withAppendedId(
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, Long.valueOf(currentMusic.getId()));
+                mediaPlayer.reset();
+                mediaPlayer.setDataSource(MusicActivity.this, uri);
+                mediaPlayer.prepare();
+            }
+
+            this.mediaPlayer.start();
+            this.playOrPause.setBackgroundResource(R.drawable.ic_media_pause);
+            this.objectAnimator.start();
+
+            durationBar.setMax(mediaPlayer.getDuration());
+            allTime.setText(showTime(mediaPlayer.getDuration()));
+            nowTime.setText(showTime(mediaPlayer.getCurrentPosition()));
+            //监听播放时回调函数
+            if(timer == null) {
+                timer = new Timer();
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if(!isSeekBarChanging){
+                            if(mediaPlayer != null && mediaPlayer.isPlaying()) {
+                                int currentPosition = mediaPlayer.getCurrentPosition();
+                                durationBar.setProgress(currentPosition);
+                                lyricView.setCurrentProgress(currentPosition);
+                            }
+                        }
+                    }
+                },0,200);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String showTime(int time){
+        time/=1000;
+        int minute = time/60;
+        int hour = minute/60;
+        int secode = time%60;
+        minute %=60;
+        return String.format("%02d:%02d", minute, secode);
+    }
+
+
+    private void initEvent() {
+        playOrPause.setOnClickListener(this);
+        prev.setOnClickListener(this);
+        next.setOnClickListener(this);
+
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                nextMusic();
+            }
         });
-
         durationBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if(!isSeekBarChanging) {
                     nowTime.setText(showTime(progress));
                 }
-//                mediaPlayer.seekTo(seekBar.getProgress());
-//                nowTime.setText(showTime(progress));
             }
 
             @Override
@@ -86,22 +174,7 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
                 isSeekBarChanging = false;
             }
         });
-        initVisualizer();
-        initImageView();
-    }
 
-    private void initImageView() {
-        imageView = findViewById(R.id.music_pic);
-        objectAnimator = ObjectAnimator.ofFloat(imageView, "rotation", 0.0f, 360.0f);
-        objectAnimator.setDuration(5000);
-        objectAnimator.setRepeatCount(Animation.INFINITE);
-        objectAnimator.setRepeatMode(ObjectAnimator.RESTART);
-        objectAnimator.setInterpolator(new LinearInterpolator());
-    }
-
-    private void initVisualizer() {
-        // Assuming you have a SpectrumView in your layout
-        fireCircleView = findViewById(R.id.spectrumView);
         visualizer = new Visualizer(mediaPlayer.getAudioSessionId());
         visualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
         visualizer.setDataCaptureListener(
@@ -121,68 +194,6 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
         );
 
         visualizer.setEnabled(true);
-    }
-
-
-    private void initData() {
-        Intent intent = getIntent();
-        musics = (List<MusicVO>) intent.getSerializableExtra("data");
-        position = intent.getIntExtra("position", 0);
-    }
-
-
-    private void startPlay() {
-        try {
-            Uri uri = ContentUris.withAppendedId(
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musics.get(position).getId());
-            mediaPlayer.reset();
-            mediaPlayer.setDataSource(MusicActivity.this, uri);
-            mediaPlayer.prepare();
-
-            this.mediaPlayer.start();
-            this.playOrPause.setBackgroundResource(R.drawable.ic_media_pause);
-            this.objectAnimator.start();
-
-            durationBar.setMax(mediaPlayer.getDuration());
-            allTime.setText(showTime(mediaPlayer.getDuration()));
-            nowTime.setText(showTime(mediaPlayer.getCurrentPosition()));
-            //监听播放时回调函数
-            Timer timer = new Timer();
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    if(!isSeekBarChanging){
-                        if(mediaPlayer != null && mediaPlayer.isPlaying()) {
-                            int currentPosition = mediaPlayer.getCurrentPosition();
-                            durationBar.setProgress(currentPosition);
-                        }
-                    }
-                }
-            },0,200);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String showTime(int time){
-        time/=1000;
-        int minute = time/60;
-        int hour = minute/60;
-        int secode = time%60;
-        minute %=60;
-        return String.format("%02d:%02d", minute, secode);
-    }
-
-
-    private void initEvent() {
-        playOrPause = findViewById(R.id.btn_play);
-        playOrPause.setOnClickListener(this);
-        prev = findViewById(R.id.btn_prev);
-        prev.setOnClickListener(this);
-        next = findViewById(R.id.btn_next);
-        next.setOnClickListener(this);
-        setPrevAndNext();
     }
 
     private void musicPlay() {

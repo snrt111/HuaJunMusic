@@ -3,9 +3,9 @@ package com.snrt.helloworld.music;
 import android.content.ContentUris;
 import android.content.Intent;
 import android.database.Cursor;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -16,7 +16,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.snrt.helloworld.R;
 import com.snrt.helloworld.task.MusicTask;
+import com.snrt.helloworld.util.HttpUtil;
 import com.snrt.helloworld.vo.Callback;
+import com.snrt.helloworld.vo.SongInfo;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -42,8 +44,9 @@ public class MusicListActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        musics.clear();
-        musics.addAll(getMusics());
+        getNetData();
+//        musics.clear();
+//        musics.addAll(getMusics());
     }
 
     private void getNetData() {
@@ -153,10 +156,10 @@ public class MusicListActivity extends AppCompatActivity {
                 if (title != null && title.length() > 0) {
                     name = title;
                 }
-                MusicVO video = new MusicVO(id, name, duration, size);
+                MusicVO video = new MusicVO(String.valueOf(id), name, String.valueOf(duration), String.valueOf(size));
 
                 if (!videoList.contains(video)) {
-                    if (video.getDuration() > 0) {
+                    if (Long.valueOf(video.getDuration()) > 0) {
                         videoList.add(video);
                     }
                 }
