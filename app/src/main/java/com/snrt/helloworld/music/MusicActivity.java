@@ -20,6 +20,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.snrt.helloworld.R;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -134,12 +137,9 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private String showTime(int time){
-        time/=1000;
-        int minute = time/60;
-        int hour = minute/60;
-        int secode = time%60;
-        minute %=60;
-        return String.format("%02d:%02d", minute, secode);
+        DateFormat dateFormat = new SimpleDateFormat("mm:ss");
+        String format = dateFormat.format(new Date(time));
+        return format;
     }
 
 

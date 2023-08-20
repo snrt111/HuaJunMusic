@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 public class HttpUtil {
 
 
-    public static final String HTTP_IP_PORT = "http://192.168.43.177:3000";
-    public static final Integer LIMIT_COUNT = 10;
+    public static final String HTTP_IP_PORT = "http://58.87.89.39:3000";
+    public static final Integer LIMIT_COUNT = 50;
 
     private static String getData(String url) {
         OkHttpClient client = new OkHttpClient();
@@ -42,7 +42,7 @@ public class HttpUtil {
 
     private static Gson gson = new GsonBuilder().serializeNulls().disableHtmlEscaping().create();
     public static List<SongInfo> getSongerList(){
-        String url ="http://192.168.2.26:3000/artist/list?type=1&area=7";
+        String url = HTTP_IP_PORT + "/artist/list?type=1&area=7";
         String data = getData(url);
         SongListVo songListVo = gson.fromJson(data, SongListVo.class);
         List<SongInfo> songs = songListVo.getSongs();
