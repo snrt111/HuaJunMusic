@@ -56,13 +56,10 @@ public class MusicListActivity extends AppCompatActivity {
             public void setData(List<MusicVO> data) {
                 musics.clear();
                 musics.addAll(data);
-                for (MusicVO music : musics) {
-                    Log.e(TAG, music.toString());
-                }
                 mAdapter.notifyDataSetChanged();
             }
         });
-        musicTask.execute(123);
+        musicTask.execute();
     }
 
     private void initView() {
@@ -147,8 +144,6 @@ public class MusicListActivity extends AppCompatActivity {
                 String artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
                 Long duration = cursor.getLong(durationColumn);
                 Long size = cursor.getLong(sizeColumn);
-                String msg = "name:" + name + ";title" + title + ";duration" + duration + ";author" + artist + ";size" + size;
-                Log.e(TAG, msg);
 
                 Uri contentUri = ContentUris.withAppendedId(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);

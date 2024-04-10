@@ -21,47 +21,14 @@ public class MusicTask extends AsyncTask<Integer, Integer, List<MusicVO>> {
 
     private Callback callback;
 
-    OkHttpClient httpClient = new OkHttpClient();
 
     public void setCallback(Callback callback) {
         this.callback = callback;
     }
 
-   // String url ="http://mobilecdnbj.kugou.com/api/v3/singer/song?sorttype=2&version=9108&identity=3&plat=0&pagesize=100&singerid=548441&area_code=1&page=1&with_res_tag=1";
-    String url ="http://192.168.43.177:3000/lyric?id=163123";
     @Override
     protected List<MusicVO> doInBackground(Integer... integers) {
         return HttpUtil.getSongList();
-    }
-
-    private List<MusicVO> getMusicVOS() {
-        List<MusicVO> result = new ArrayList<>();
-        Request request = new Request.Builder().url(url).build();
-        try {
-            Response response = httpClient.newCall(request).execute();
-            final String body = response.body().string();
-            LrcResponse lrcResponse = new Gson().fromJson(body, LrcResponse.class);
-            Log.i(TAG, "onResponse: "+lrcResponse.getLrc());
-//            String replace = body.replace("<!--KG_TAG_RES_START-->", "");
-//            Log.i(TAG, "onResponse: "+ replace);
-//            Gson gson = new GsonBuilder().serializeNulls().create();
-//
-//            JSONObject jsonObject = new JSONObject(replace);
-//            String data = jsonObject.getString("data");
-//            DataVo dataVo = gson.fromJson(data, DataVo.class);
-//            List<InfoVO> info = dataVo.getInfo();
-//            Log.i(TAG, "onResponse: "+ info);
-//
-//            Uri uri = Uri.parse("");
-//            long id = 0;
-//            for (InfoVO infoVO : info) {
-//                result.add(new MusicVO(id, infoVO.getFilename(),infoVO.getDuration(),infoVO.getFilesize()));
-//            }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return result;
     }
 
     @Override

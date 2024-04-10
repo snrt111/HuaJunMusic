@@ -3,11 +3,12 @@ package com.snrt.helloworld.music;
 import android.animation.ObjectAnimator;
 import android.content.ContentUris;
 import android.content.Intent;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.audiofx.Visualizer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.view.View;
 import android.view.animation.Animation;
@@ -88,52 +89,56 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
 
 
     private void startPlay() {
-        try {
-            MusicVO currentMusic = musics.get(position);
-            String url = currentMusic.getUrl();
-            songName.setText(currentMusic.getName());
-            lyricView.setLyrics(LyricParser.parseLyrics(currentMusic.getLyric()));
-            if(url != null && url !="") {
+        MusicVO currentMusic = musics.get(position);
+        String url = currentMusic.getUrl();
+        songName.setText(currentMusic.getName());
+        lyricView.setLyrics(LyricParser.parseLyrics(currentMusic.getLyric()));
+        new Thread(() -> {
+            try {
+                if(url != null && url !="") {
+                    mediaPlayer.reset();
+                    mediaPlayer.setDataSource(url);
+                    mediaPlayer.prepare();
+                } else {
+                    Uri uri = ContentUris.withAppendedId(
+                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, Long.valueOf(currentMusic.getId()));
+                    mediaPlayer.reset();
+                    mediaPlayer.setDataSource(MusicActivity.this, uri);
+                    mediaPlayer.prepare();
+                }
 
-                mediaPlayer.reset();
-                mediaPlayer.setDataSource(url);
-                mediaPlayer.prepare();
-            } else {
+                this.mediaPlayer.start();
+                new Handler(Looper.getMainLooper()).post(() ->{
+                    this.playOrPause.setBackgroundResource(R.drawable.ic_media_pause);
+                    this.objectAnimator.start();
 
-                Uri uri = ContentUris.withAppendedId(
-                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, Long.valueOf(currentMusic.getId()));
-                mediaPlayer.reset();
-                mediaPlayer.setDataSource(MusicActivity.this, uri);
-                mediaPlayer.prepare();
-            }
-
-            this.mediaPlayer.start();
-            this.playOrPause.setBackgroundResource(R.drawable.ic_media_pause);
-            this.objectAnimator.start();
-
-            durationBar.setMax(mediaPlayer.getDuration());
-            allTime.setText(showTime(mediaPlayer.getDuration()));
-            nowTime.setText(showTime(mediaPlayer.getCurrentPosition()));
-            //监听播放时回调函数
-            if(timer == null) {
-                timer = new Timer();
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        if(!isSeekBarChanging){
-                            if(mediaPlayer != null && mediaPlayer.isPlaying()) {
-                                int currentPosition = mediaPlayer.getCurrentPosition();
-                                durationBar.setProgress(currentPosition);
-                                lyricView.setCurrentProgress(currentPosition);
+                    durationBar.setMax(mediaPlayer.getDuration());
+                    allTime.setText(showTime(mediaPlayer.getDuration()));
+                    nowTime.setText(showTime(mediaPlayer.getCurrentPosition()));
+                    //监听播放时回调函数
+                    if(timer == null) {
+                        timer = new Timer();
+                        timer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                if(!isSeekBarChanging){
+                                    if(mediaPlayer != null && mediaPlayer.isPlaying()) {
+                                        int currentPosition = mediaPlayer.getCurrentPosition();
+                                        durationBar.setProgress(currentPosition);
+                                        lyricView.setCurrentProgress(currentPosition);
+                                    }
+                                }
                             }
-                        }
+                        },0,200);
                     }
-                },0,200);
-            }
+                });
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+
     }
 
     private String showTime(int time){
@@ -197,27 +202,38 @@ public class MusicActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void musicPlay() {
-        this.mediaPlayer.start();
-        this.playOrPause.setBackgroundResource(R.drawable.ic_media_pause);
-        this.objectAnimator.resume();
+        new Thread(() ->{
+            this.mediaPlayer.start();
+            new Handler(Looper.getMainLooper()).post(() ->{
+                this.playOrPause.setBackgroundResource(R.drawable.ic_media_pause);
+                this.objectAnimator.resume();
+            });
+        }).start();
     }
 
     private void musicPause() {
-        if (this.mediaPlayer.isPlaying()) {
-            this.mediaPlayer.pause();
-            this.playOrPause.setBackgroundResource(R.drawable.ic_media_play);
-            this.objectAnimator.pause();
-        }
+        new Thread(() ->{
+            if (this.mediaPlayer.isPlaying()) {
+                this.mediaPlayer.pause();
+                new Handler(Looper.getMainLooper()).post(() ->{
+                    this.playOrPause.setBackgroundResource(R.drawable.ic_media_play);
+                    this.objectAnimator.pause();
+                });
+
+            }
+        }).start();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        this.mediaPlayer.release();
-        this.mediaPlayer = null;
-        if (this.visualizer != null) {
-            this.visualizer.release();
-        }
+        new Thread(() ->{
+            this.mediaPlayer.release();
+            this.mediaPlayer = null;
+            if (this.visualizer != null) {
+                this.visualizer.release();
+            }
+        }).start();
     }
 
     @Override

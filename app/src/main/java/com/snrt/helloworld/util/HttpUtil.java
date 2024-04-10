@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class HttpUtil {
 
 
-    public static final String HTTP_IP_PORT = "http://58.87.89.39:3000";
+    public static final String HTTP_IP_PORT = "http://10.0.2.2:3000";
     public static final Integer LIMIT_COUNT = 50;
 
     private static String getData(String url) {
@@ -33,7 +33,6 @@ public class HttpUtil {
         try {
             Response response = client.newCall(request).execute();
             string = response.body().string();
-            System.out.println(string);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
