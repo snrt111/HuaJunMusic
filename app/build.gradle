@@ -3,9 +3,14 @@ plugins {
 }
 
 // ============================================
-// 华军音乐 - Android应用构建配置
-// 支持在线打包系统（CI/CD）
+// HuaJunMusic - Android Build Configuration
+// Compatible with CI/CD pipeline
 // ============================================
+
+// AspectJ imports (must be at top)
+import org.aspectj.bridge.IMessage
+import org.aspectj.bridge.MessageHandler
+import org.aspectj.tools.ajc.Main
 
 android {
     namespace 'com.snrt.helloworld'
@@ -21,65 +26,31 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    // ============================================
-    // 签名配置（支持CI/CD自动打包）
-    // ============================================
-    def keystorePropertiesFile = rootProject.file("app/keystore/keystore.properties")
-    def keystoreProperties = new Properties()
-
-    if (keystorePropertiesFile.exists()) {
-        // 开发环境：从本地文件读取签名配置
-        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-        println("✅ 已加载本地签名配置: ${keystorePropertiesFile}")
-    } else {
-        println("⚠️ 未找到签名配置文件，Release构建将使用debug签名")
-        // CI/CD环境：通过环境变量或Gradle属性传递（由GitHub Actions设置）
-    }
-
+    // Signing configuration
     signingConfigs {
         debug {
-            // Debug签名使用默认配置
+            // Use default debug keystore
         }
-
         release {
-            if (keystorePropertiesFile.exists()) {
-                // 本地开发环境：使用keystore.properties
-                storeFile file(keystoreProperties['STORE_FILE'])
-                storePassword keystoreProperties['STORE_PASSWORD']
-                keyAlias keystoreProperties['KEY_ALIAS']
-                keyPassword keystoreProperties['KEY_PASSWORD']
-            } else if (project.hasProperty('KEYSTORE_FILE')) {
-                // CI/CD环境：使用Gradle属性（由GitHub Actions注入）
-                storeFile file(project.property('KEYSTORE_FILE'))
-                storePassword project.property('KEYSTORE_PASSWORD')
-                keyAlias project.property('KEY_ALIAS')
-                keyPassword project.property('KEY_PASSWORD')
-            } else {
-                // 无签名配置时使用debug签名（仅用于测试）
-                println("⚠️ Release构建未配置签名，将使用debug证书")
-            }
+            // For local development: configure in app/keystore/keystore.properties
+            // For CI/CD: use GitHub Secrets (optional for Debug builds)
         }
-    }
-
-    lint {
-        baseline = file("lint-baseline.xml")
     }
 
     buildTypes {
         debug {
-            // Debug构建：使用默认debug签名
             applicationIdSuffix ".debug"
             versionNameSuffix "-DEBUG"
             debuggable true
         }
 
         release {
-            // Release构建：使用配置的签名
-            signingConfig signingConfigs.release
+            // Use debug signing if no release config available
+            signingConfig signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
-            // 构建产物命名规则：app-{flavor}-{versionName}.apk
+            // Custom APK naming
             applicationVariants.all { variant ->
                 variant.outputs.all { output ->
                     def appName = "HuajunMusic"
@@ -92,10 +63,12 @@ android {
             }
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
     sourceSets {
         main {
             assets {
@@ -114,18 +87,17 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    // 其他依赖库
+    
+    // Third-party libraries
     implementation 'com.google.code.gson:gson:2.8.4'
     implementation 'com.squareup.okhttp3:okhttp:3.4.1'
     implementation 'cn.hutool:hutool-all:5.7.14'
     api 'org.aspectj:aspectjrt:1.9.8'
 }
 
-
-
-import org.aspectj.bridge.IMessage
-import org.aspectj.bridge.MessageHandler
-import org.aspectj.tools.ajc.Main
+// ============================================
+// AspectJ weaving configuration
+// ============================================
 final def log = project.logger
 final def variants = project.android.applicationVariants
 
@@ -142,6 +114,7 @@ variants.all { variant ->
 
         MessageHandler handler = new MessageHandler(true)
         new Main().run(args, handler)
+        
         for (IMessage message : handler.getMessages(null, true)) {
             switch (message.getKind()) {
                 case IMessage.ABORT:
