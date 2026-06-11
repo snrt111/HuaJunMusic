@@ -19,6 +19,7 @@ import androidx.core.app.ActivityCompat;
 import com.snrt.helloworld.game.GameActivity;
 import com.snrt.helloworld.music.FireCircleActivity;
 import com.snrt.helloworld.music.MusicHandler;
+import com.snrt.helloworld.music.SearchActivity;
 import com.snrt.helloworld.util.HttpUtil;
 import com.snrt.helloworld.util.PermissionUtil;
 import com.snrt.helloworld.video.VideoHandler;
@@ -96,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         handlerMap.put(R.id.video, new VideoHandler(this));
         handlerMap.put(R.id.game, () -> startActivity(new Intent(this, GameActivity.class)));
         handlerMap.put(R.id.map, () -> startActivity(new Intent(this, FireCircleActivity.class)));
+        handlerMap.put(R.id.search, () -> startActivity(new Intent(this, SearchActivity.class)));
     }
 
     @Override

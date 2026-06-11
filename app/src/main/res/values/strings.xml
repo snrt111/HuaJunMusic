@@ -9,4 +9,5 @@
     <string name="prev">上一首</string>
     <string name="next">下一首</string>
     <string name="game">游戏</string>
+    <string name="search">搜索</string>
 </resources>
