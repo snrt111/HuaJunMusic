@@ -20,3 +20,17 @@ local.properties
 /gradle/
 
 /app/src/main/assets/
+
+# ============================================
+# 签名配置保护（在线打包系统）
+# ============================================
+# Keystore文件（绝不能提交）
+**/*.keystore
+**/*.jks
+
+# 签名属性文件（包含敏感信息）
+/app/keystore/keystore.properties
+!/app/keystore/keystore.properties.example
+
+# 备份文件
+app/build.gradle.backup

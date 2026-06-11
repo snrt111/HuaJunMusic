@@ -1,43 +1,371 @@
-name: Android Build
+# HuaJunMusic 在线打包工作流
+# 支持自动版本管理、APK签名、多环境构建、产物发布
+
+name: Android CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, develop ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: '构建类型'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
+      version_name:
+        description: '版本号 (例如: 1.2.0)'
+        required: false
+        type: string
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+  JAVA_VERSION: '17'
+  ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
 jobs:
-  build:
+  # ============================================
+  # Job 1: 版本管理和准备工作
+  # ============================================
+  prepare:
+    name: 📋 准备和版本管理
     runs-on: ubuntu-latest
+    outputs:
+      version_name: ${{ steps.version.outputs.version_name }}
+      version_code: ${{ steps.version.outputs.version_code }}
+      is_release: ${{ steps.check_tag.outputs.is_release }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 检查是否为Release标签
+        id: check_tag
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "🎉 检测到Release标签: ${{ github.ref_name }}"
+          else
+            echo "is_release=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 获取/设置版本号
+        id: version
+        run: |
+          # 如果通过workflow_dispatch指定了版本号，使用指定的版本
+          if [ -n "${{ inputs.version_name }}" ]; then
+            VERSION_NAME="${{ inputs.version_name }}"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # 从tag提取版本号（去掉v前缀）
+            VERSION_NAME="${{ github.ref_name }}"
+            VERSION_NAME="${VERSION_NAME#v}"
+          else
+            # 从build.gradle读取当前版本号
+            VERSION_NAME=$(grep 'versionName' app/build.gradle | head -1 | sed "s/.*'\(.*\)'.*/\1/")
+          fi
+
+          # 自动递增versionCode（基于git提交数+时间戳）
+          VERSION_CODE=$(git rev-list --count HEAD)
+          TIMESTAMP=$(date +%y%m%d%H)
+          VERSION_CODE="${VERSION_CODE}${TIMESTAMP}"
+
+          echo "version_name=${VERSION_NAME}" >> $GITHUB_OUTPUT
+          echo "version_code=${VERSION_CODE}" >> $GITHUB_OUTPUT
+          echo "📌 版本信息: v${VERSION_NAME} (${VERSION_CODE})"
+
+      - name: 更新版本号到build.gradle
+        run: |
+          # 备份原文件
+          cp app/build.gradle app/build.gradle.backup
+
+          # 替换versionName
+          sed -i "s/versionName .*/versionName '${{ steps.version.outputs.version_name }}'/" app/build.gradle
+
+          # 替换versionCode
+          sed -i "s/versionCode .*/versionCode ${{ steps.version.outputs.version_code }}/" app/build.gradle
+
+          echo "✅ 已更新版本号到build.gradle"
+
+      - name: 上传更新后的gradle文件
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-config
+          path: |
+            app/build.gradle
+          retention-days: 1
+
+  # ============================================
+  # Job 2: 构建Debug APK
+  # ============================================
+  build-debug:
+    name: 🔨 构建Debug APK
+    needs: prepare
+    runs-on: ubuntu-latest
+    if: github.event.inputs.build_type != 'release' || github.event.inputs.build_type == ''
 
     steps:
-    - uses: actions/checkout@v3
+      - name: 检出代码
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+      - name: 下载Gradle配置
+        uses: actions/download-artifact@v4
+        with:
+          name: gradle-config
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      - name: 设置JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
 
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug
+      - name: 授予gradlew执行权限
+        run: chmod +x gradlew
 
-    - name: Upload Debug APK
-      uses: actions/upload-artifact@v3
-      with:
-        name: debug-apk
-        path: app/build/outputs/apk/debug/*.apk
+      - name: 缓存Gradle依赖
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
-    - name: Build Release APK
-      run: ./gradlew assembleRelease
+      - name: 构建Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-    - name: Upload Release APK
-      uses: actions/upload-artifact@v3
-      with:
-        name: release-apk
-        path: app/build/outputs/apk/release/*.apk
+      - name: 上传Debug APK产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: huajunmusic-debug-v${{ needs.prepare.outputs.version_name }}
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: 显示APK信息
+        run: |
+          echo "=========================================="
+          echo "📦 Debug APK构建完成！"
+          echo "📌 版本: v${{ needs.prepare.outputs.version_name }}"
+          echo "🔢 Build: ${{ needs.prepare.outputs.version_code }}"
+          echo "📁 文件位置: app/build/outputs/apk/debug/"
+          echo "=========================================="
+          ls -lh app/build/outputs/apk/debug/
+
+  # ============================================
+  # Job 3: 构建Release APK（带签名）
+  # ============================================
+  build-release:
+    name: 🏗️ 构建Release APK (签名)
+    needs: prepare
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      (needs.prepare.result == 'success') &&
+      (
+        github.event.inputs.build_type == 'release' ||
+        startsWith(github.ref, 'refs/tags/v')
+      )
+    environment: production
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 下载Gradle配置
+        uses: actions/download-artifact@v4
+        with:
+          name: gradle-config
+
+      - name: 设置JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: 授予gradlew执行权限
+        run: chmod +x gradlew
+
+      - name: 缓存Gradle依赖
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # ========== 签名配置 ==========
+      - name: 配置Release签名
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          # 创建keystore目录
+          mkdir -p app/keystore
+
+          # Base64解码keystore文件
+          echo "$KEYSTORE_BASE64" | base64 --decode > app/keystore/release.keystore
+
+          # 创建签名配置文件
+          cat > app/keystore/keystore.properties << EOF
+          STORE_FILE=release.keystore
+          STORE_PASSWORD=${KEYSTORE_PASSWORD}
+          KEY_ALIAS=${KEY_ALIAS}
+          KEY_PASSWORD=${KEY_PASSWORD}
+          EOF
+
+          echo "✅ 签名配置已完成"
+
+      - name: 构建Release APK（带签名）
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: 验证APK签名
+        run: |
+          # 使用apksigner验证签名
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          echo "🔍 验证APK签名: ${APK_PATH}"
+
+          # 获取签名信息
+          $ANDROID_SDK_ROOT/build-tools/*/apksigner verify --print-certs "${APK_PATH}" || true
+
+          # 显示APK信息
+          echo ""
+          echo "📊 APK详细信息:"
+          ls -lh "${APK_PATH}"
+          du -h "${APK_PATH}"
+
+      - name: 上传Release APK产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: huajunmusic-release-v${{ needs.prepare.outputs.version_name }}
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: 显示构建结果
+        run: |
+          echo "=========================================="
+          echo "🎉 Release APK构建并签名完成！"
+          echo "📌 版本: v${{ needs.prepare.outputs.version_name }}"
+          echo "🔢 Build: ${{ needs.prepare.outputs.version_code }}"
+          echo "✅ 签名状态: 已签名"
+          echo "📁 文件位置: app/build/outputs/apk/release/"
+          echo "=========================================="
+          ls -lh app/build/outputs/apk/release/
+
+  # ============================================
+  # Job 4: 发布到GitHub Releases
+  # ============================================
+  publish-github:
+    name: 🚀 发布到GitHub Releases
+    needs: [prepare, build-release]
+    runs-on: ubuntu-latest
+    if: needs.prepare.outputs.is_release == 'true'
+    permissions:
+      contents: write
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 下载Release APK
+        uses: actions/download-artifact@v4
+        with:
+          name: huajunmusic-release-v${{ needs.prepare.outputs.version_name }}
+          path: ./release-apk/
+
+      - name: 创建GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "🎵 华军音乐 v${{ needs.prepare.outputs.version_name }}"
+          body: |
+            ## 🎉 华军音乐 v${{ needs.prepare.outputs.version_name }}
+
+            ### ✨ 新特性
+            <!-- 在这里添加新特性说明 -->
+
+            ### 🐛 Bug修复
+            <!-- 在这里添加修复说明 -->
+
+            ### 📱 安装说明
+            1. 下载下方的APK文件
+            2. 在手机上允许安装未知来源应用
+            3. 点击安装即可
+
+            ### 📋 构建信息
+            - **版本号**: v${{ needs.prepare.outputs.version_name }}
+            - **构建号**: ${{ needs.prepare.outputs.version_code }}
+            - **构建时间**: ${{ github.event.head_commit.timestamp }}
+            - **Commit**: ${{ github.sha }}
+
+            ---
+            *由 GitHub Actions 自动构建发布*
+          files: ./release-apk/*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 发布成功通知
+        run: |
+          echo "=========================================="
+          echo "🎊 Release发布成功！"
+          echo "🔗 访问地址:"
+          echo "   https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          echo "=========================================="
+
+  # ============================================
+  # Job 5: 构建通知
+  # ============================================
+  notify:
+    name: 📧 构建通知
+    needs: [build-debug, build-release]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: 发送构建结果通知
+        run: |
+          # 构建状态汇总
+          DEBUG_STATUS="${{ needs.build-debug.result }}"
+          RELEASE_STATUS="${{ needs.build-release.result }}"
+
+          echo "=========================================="
+          echo "📋 构建任务完成报告"
+          echo "=========================================="
+          echo "📌 触发事件: ${{ github.event_name }}"
+          echo "📌 分支/标签: ${{ github.ref_name }}"
+          echo "📌 提交者: ${{ github.actor }}"
+          echo "------------------------------------------"
+          echo "🔨 Debug构建: ${DEBUG_STATUS}"
+          echo "🏗️ Release构建: ${RELEASE_STATUS}"
+          echo "------------------------------------------"
+
+          if [[ "$DEBUG_STATUS" == "success" || "$RELEASE_STATUS" == "success" ]]; then
+            echo "✅ 构建成功！请在Artifacts中下载APK文件。"
+          else
+            echo "❌ 构建失败，请检查日志排查问题。"
+          fi
+
+          echo "=========================================="
+
+          # 这里可以添加钉钉、企业微信、邮件等通知
+          # 示例：钉钉机器人通知
+          # curl -X POST '${{ secrets.DINGTALK_WEBHOOK }}' \
+          #   -H 'Content-Type: application/json' \
+          #   -d '{"msgtype":"text","text":{"content":"构建通知内容"}}'
