@@ -2,16 +2,6 @@ plugins {
     id 'com.android.application'
 }
 
-// ============================================
-// HuaJunMusic - Android Build Configuration
-// Compatible with CI/CD pipeline
-// ============================================
-
-// AspectJ imports (must be at top)
-import org.aspectj.bridge.IMessage
-import org.aspectj.bridge.MessageHandler
-import org.aspectj.tools.ajc.Main
-
 android {
     namespace 'com.snrt.helloworld'
     compileSdk 32
@@ -22,59 +12,22 @@ android {
         targetSdk 32
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    // Signing configuration
-    signingConfigs {
-        debug {
-            // Use default debug keystore
-        }
-        release {
-            // For local development: configure in app/keystore/keystore.properties
-            // For CI/CD: use GitHub Secrets (optional for Debug builds)
-        }
     }
 
     buildTypes {
         debug {
-            applicationIdSuffix ".debug"
-            versionNameSuffix "-DEBUG"
             debuggable true
         }
-
         release {
-            // Use debug signing if no release config available
-            signingConfig signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-
-            // Custom APK naming
-            applicationVariants.all { variant ->
-                variant.outputs.all { output ->
-                    def appName = "HuajunMusic"
-                    def versionName = variant.versionName
-                    def buildType = variant.buildType.name
-                    def date = new Date().format('yyyyMMdd')
-
-                    outputFileName = "${appName}-${buildType}-v${versionName}-${date}.apk"
-                }
-            }
         }
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
-    }
-
-    sourceSets {
-        main {
-            assets {
-                srcDirs 'src\\main\\assets'
-            }
-        }
     }
 }
 
@@ -83,7 +36,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
-    implementation 'androidx.annotation:annotation:1.3.0'
+    
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
@@ -92,46 +45,4 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.4'
     implementation 'com.squareup.okhttp3:okhttp:3.4.1'
     implementation 'cn.hutool:hutool-all:5.7.14'
-    api 'org.aspectj:aspectjrt:1.9.8'
-}
-
-// ============================================
-// AspectJ weaving configuration
-// ============================================
-final def log = project.logger
-final def variants = project.android.applicationVariants
-
-variants.all { variant ->
-    JavaCompile javaCompile = variant.javaCompileProvider.get()
-    javaCompile.doLast {
-        String[] args = ["-showWeaveInfo",
-                         "-17",
-                         "-inpath", javaCompile.destinationDir.toString(),
-                         "-aspectpath", javaCompile.classpath.asPath,
-                         "-d", javaCompile.destinationDir.toString(),
-                         "-classpath", javaCompile.classpath.asPath,
-                         "-bootclasspath", project.android.bootClasspath.join(File.pathSeparator)]
-
-        MessageHandler handler = new MessageHandler(true)
-        new Main().run(args, handler)
-        
-        for (IMessage message : handler.getMessages(null, true)) {
-            switch (message.getKind()) {
-                case IMessage.ABORT:
-                case IMessage.ERROR:
-                case IMessage.FAIL:
-                    log.error message.message, message.thrown
-                    break
-                case IMessage.WARNING:
-                    log.warn message.message, message.thrown
-                    break
-                case IMessage.INFO:
-                    log.info message.message, message.thrown
-                    break
-                case IMessage.DEBUG:
-                    log.debug message.message, message.thrown
-                    break
-            }
-        }
-    }
 }
