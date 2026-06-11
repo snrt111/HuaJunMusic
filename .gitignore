@@ -34,3 +34,4 @@ local.properties
 
 # 备份文件
 app/build.gradle.backup
+**/*.bak
