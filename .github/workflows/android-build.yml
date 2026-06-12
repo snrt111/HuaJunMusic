@@ -59,9 +59,10 @@ jobs:
       - name: Build Debug APK
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace --info --refresh-dependencies --no-build-cache
+          ./gradlew assembleDebug --no-daemon --stacktrace --refresh-dependencies --no-build-cache
+        continue-on-error: false
 
-      - name: Upload Debug APK
+      - name: 上传 Debug APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
@@ -123,7 +124,8 @@ jobs:
       - name: Build Release APK
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace --info --refresh-dependencies --no-build-cache
+          ./gradlew assembleRelease --no-daemon --stacktrace --refresh-dependencies --no-build-cache
+        continue-on-error: false
         env:
           KEYSTORE_FILE: ${{ steps.prepare_keystore.outputs.KEYSTORE_PATH }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
