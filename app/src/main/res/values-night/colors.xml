@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 夜间模式：沿用应用主题色，与深色背景协调 -->
     <color name="primary">#E91E63</color>
     <color name="primary_dark">#C2185B</color>
     <color name="accent">#FF4081</color>
@@ -15,15 +16,15 @@
     <color name="seek_bar_progress">#E91E63</color>
     <color name="seek_bar_bg">#404060</color>
 
-    <!-- Material Design 标准灰色系列（用于 MaterialComponents 主题） -->
-    <color name="gray_50">#FAFAFA</color>
-    <color name="gray_100">#F5F5F5</color>
-    <color name="gray_200">#EEEEEE</color>
-    <color name="gray_300">#E0E0E0</color>
-    <color name="gray_400">#BDBDBD</color>
+    <!-- Material Design 标准灰色系列（夜间模式用深色版本） -->
+    <color name="gray_50">#2A2A45</color>
+    <color name="gray_100">#25253D</color>
+    <color name="gray_200">#1A1A2E</color>
+    <color name="gray_300">#121225</color>
+    <color name="gray_400">#606080</color>
     <color name="gray_500">#9E9E9E</color>
-    <color name="gray_600">#757575</color>
-    <color name="gray_700">#616161</color>
-    <color name="gray_800">#424242</color>
-    <color name="gray_900">#212121</color>
+    <color name="gray_600">#B0B0C0</color>
+    <color name="gray_700">#E0E0E0</color>
+    <color name="gray_800">#F5F5F5</color>
+    <color name="gray_900">#FFFFFF</color>
 </resources>
