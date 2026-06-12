@@ -27,4 +27,15 @@
     <color name="gray_700">#E0E0E0</color>
     <color name="gray_800">#F5F5F5</color>
     <color name="gray_900">#FFFFFF</color>
+
+    <!-- 标准颜色 -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <!-- 游戏模块棋子背景色 -->
+    <color name="chess_bg">#FFC8B08C</color>
+
+    <!-- 底部导航栏颜色 -->
+    <color name="bottom_nav_color_selected">@color/primary</color>
+    <color name="bottom_nav_color_default">#80808080</color>
 </resources>
