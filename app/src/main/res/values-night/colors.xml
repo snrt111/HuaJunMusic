@@ -34,8 +34,4 @@
 
     <!-- 游戏模块棋子背景色 -->
     <color name="chess_bg">#FFC8B08C</color>
-
-    <!-- 底部导航栏颜色 -->
-    <color name="bottom_nav_color_selected">@color/primary</color>
-    <color name="bottom_nav_color_default">#80808080</color>
 </resources>
