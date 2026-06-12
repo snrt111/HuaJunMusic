@@ -53,13 +53,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '7.5'
           cache-write-only: false
           cache-read-only: false
 
       - name: Build Debug APK
         run: |
-          gradle assembleDebug --no-daemon --stacktrace --info
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace --info --refresh-dependencies --no-build-cache
 
       - name: Upload Debug APK
         if: success()
@@ -98,7 +98,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '7.5'
           cache-write-only: false
           cache-read-only: false
 
@@ -123,7 +122,8 @@ jobs:
 
       - name: Build Release APK
         run: |
-          gradle assembleRelease --no-daemon --stacktrace --info
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace --info --refresh-dependencies --no-build-cache
         env:
           KEYSTORE_FILE: ${{ steps.prepare_keystore.outputs.KEYSTORE_PATH }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
