@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.huajun.music'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.huajun.music"
         minSdk 24
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -69,8 +69,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
         coreLibraryDesugaringEnabled true
     }
 }
@@ -78,57 +78,44 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    // =====================
-    // 核心库 desugaring
-    // =====================
+    // 核心库 desugaring（与 AGP 7.4.x 兼容）
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 
-    // =====================
-    // AndroidX 核心 UI
-    // =====================
+    // Kotlin 标准库（现代 AndroidX 依赖底层使用 Kotlin 编写）
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
+
+    // AndroidX 核心 UI（与 AGP 7.4.x 兼容的稳定版本）
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core:1.12.0'
-    implementation 'androidx.activity:activity:1.8.2'
-    implementation 'androidx.fragment:fragment:1.6.2'
+    implementation 'androidx.activity:activity:1.7.2'
+    implementation 'androidx.fragment:fragment:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
 
-    // =====================
-    // Material Design 3
-    // =====================
-    implementation 'com.google.android.material:material:1.11.0'
+    // Material Design
+    implementation 'com.google.android.material:material:1.9.0'
 
-    // =====================
     // Glide 图片加载
-    // =====================
     implementation 'com.github.bumptech.glide:glide:4.16.0'
 
-    // =====================
-    // Media3 / ExoPlayer（音乐播放核心）
-    // =====================
-    implementation 'androidx.media3:media3-exoplayer:1.2.1'
-    implementation 'androidx.media3:media3-common:1.2.1'
-    implementation 'androidx.media3:media3-session:1.2.1'
+    // Media3 / ExoPlayer（稳定版 1.0.2，与 AGP 7.4.x 兼容）
+    implementation 'androidx.media3:media3-exoplayer:1.0.2'
+    implementation 'androidx.media3:media3-common:1.0.2'
+    implementation 'androidx.media3:media3-session:1.0.2'
 
-    // =====================
     // LiveData / Lifecycle
-    // =====================
-    implementation 'androidx.lifecycle:lifecycle-runtime:2.7.0'
-    implementation 'androidx.lifecycle:lifecycle-livedata:2.7.0'
-    implementation 'androidx.lifecycle:lifecycle-common:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime:2.6.1'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.6.1'
+    implementation 'androidx.lifecycle:lifecycle-common:2.6.1'
 
-    // =====================
     // 网络与 JSON
-    // =====================
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 
-    // =====================
     // 测试依赖
-    // =====================
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
