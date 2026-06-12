@@ -1,17 +1,6 @@
 # ============================================================
 # 华军音乐 HuaJunMusic - Android 自动打包 Workflow
 # ============================================================
-# 功能说明：
-#   1. 构建 Debug APK（默认开启，无需签名）
-#   2. 构建 Release APK（可选，需配置签名密钥 Secret）
-#   3. 自动上传构建产物至 Artifacts
-#   4. 智能缓存 Gradle 依赖，加速重复构建
-#
-# 使用方式：
-#   - 推送到 main/master 分支自动触发
-#   - 在 GitHub Actions 页面手动触发（workflow_dispatch）
-#   - 创建 tag/v* 标签时自动构建 Release 版本
-# ============================================================
 
 name: Android Build
 
@@ -33,11 +22,6 @@ on:
           - both
           - debug
           - release
-      upload_artifacts:
-        description: '上传构建产物 (Upload Artifacts)'
-        required: true
-        default: true
-        type: boolean
 
 # 全局环境变量
 env:
@@ -56,17 +40,17 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: 📥 检出代码 (Checkout)
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: ☕ 配置 Java 环境 (Setup JDK ${{ env.JAVA_VERSION }})
+      - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DIST }}
           cache: 'gradle'
 
-      - name: 📦 配置 Gradle Wrapper
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '7.5'
@@ -74,77 +58,45 @@ jobs:
           cache-read-only: false
           dependency-graph: 'none'
 
-      - name: 🔍 验证 Gradle 环境
+      - name: Build Debug APK
         run: |
-          echo "=== Java 版本 ==="
-          java -version
-          echo ""
-          echo "=== Gradle 版本 ==="
-          gradle --version
-          echo ""
-          echo "=== 项目文件 ==="
-          ls -la
+          gradle assembleDebug --no-daemon --stacktrace --info
 
-      - name: 🔨 构建 Debug APK
-        run: |
-          gradle assembleDebug \
-            --no-daemon \
-            --stacktrace \
-            --info
-
-      - name: 📋 列出构建产物
+      - name: Upload Debug APK
         if: success()
-        run: |
-          echo "=== APK 文件列表 ==="
-          find app/build/outputs/apk -name "*.apk" -type f
-          echo ""
-          echo "=== APK 文件大小 ==="
-          ls -lh app/build/outputs/apk/debug/*.apk
-
-      - name: 📤 上传 Debug APK 产物
-        if: success() && (github.event.inputs.upload_artifacts != 'false' || github.event_name != 'workflow_dispatch')
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.APP_NAME }}-Debug-APK-${{ github.run_id }}
+          name: ${{ env.APP_NAME }}-Debug-APK
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 30
           compression-level: 9
 
-      - name: 📊 生成构建摘要 (Summary)
+      - name: Build Summary
         if: success()
         run: |
-          echo "# 🎵 华军音乐 Debug 构建完成" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**状态**: ✅ 构建成功" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 构建信息" >> $GITHUB_STEP_SUMMARY
-          echo "- **分支**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **提交**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **工作流**: \`#${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 下载产物" >> $GITHUB_STEP_SUMMARY
-          echo "- Debug APK: 请查看下方 Artifacts 区域" >> $GITHUB_STEP_SUMMARY
+          echo "## Debug APK 构建完成" >> $GITHUB_STEP_SUMMARY
+          echo "- APK 文件已上传至 Artifacts" >> $GITHUB_STEP_SUMMARY
 
-  # ==================== Release APK 构建（含签名） ====================
+  # ==================== Release APK 构建 ====================
   build-release:
-    name: 构建 Release APK (含签名)
+    name: 构建 Release APK
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.build_type != 'debug' }}
     timeout-minutes: 30
-    needs: build-debug  # Debug 成功后再构建 Release
+    needs: build-debug
 
     steps:
-      - name: 📥 检出代码 (Checkout)
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: ☕ 配置 Java 环境 (Setup JDK ${{ env.JAVA_VERSION }})
+      - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DIST }}
           cache: 'gradle'
 
-      - name: 📦 配置 Gradle Wrapper
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '7.5'
@@ -152,86 +104,53 @@ jobs:
           cache-read-only: false
           dependency-graph: 'none'
 
-      - name: 🔑 准备签名密钥 (Keystore Decode)
+      - name: Prepare signing keystore
         id: prepare_keystore
-        if: ${{ vars.KEYSTORE_BASE64 != '' && secrets.KEYSTORE_PASSWORD != '' }}
-        run: |
-          echo "✅ 检测到签名配置，准备 Release 签名..."
-          echo "$KEYSTORE_BASE64" | base64 --decode > $RUNNER_TEMP/release-keystore.jks
-          ls -lh $RUNNER_TEMP/release-keystore.jks
-          echo "KEYSTORE_PATH=$RUNNER_TEMP/release-keystore.jks" >> $GITHUB_OUTPUT
-          echo "HAS_KEYSTORE=true" >> $GITHUB_OUTPUT
         env:
           KEYSTORE_BASE64: ${{ vars.KEYSTORE_BASE64 }}
-
-      - name: ⚠️ 无签名配置提示
-        if: ${{ vars.KEYSTORE_BASE64 == '' || secrets.KEYSTORE_PASSWORD == '' }}
         run: |
-          echo "⚠️  未配置签名密钥，Release APK 将使用默认 debug 签名"
-          echo "ℹ️  如需正式签名，请在 GitHub Secrets 中配置："
-          echo "   - vars.KEYSTORE_BASE64: keystore 文件的 base64 编码"
-          echo "   - secrets.KEYSTORE_PASSWORD: keystore 密码"
-          echo "   - secrets.KEY_ALIAS: 密钥别名"
-          echo "   - secrets.KEY_PASSWORD: 密钥密码"
+          # 注意：secrets 不能在 if 条件中使用，所以在 step 内部检测
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "检测到签名配置 (vars.KEYSTORE_BASE64，使用正式签名"
+            echo "$KEYSTORE_BASE64" | base64 --decode > $RUNNER_TEMP/release-keystore.jks
+            KEYSTORE_PATH="$RUNNER_TEMP/release-keystore.jks"
+            echo "KEYSTORE_PATH=$KEYSTORE_PATH" >> $GITHUB_OUTPUT
+            echo "HAS_KEYSTORE=true" >> $GITHUB_OUTPUT
+          else
+            echo "未配置签名密钥，Release APK 将使用默认 debug 签名"
+            echo "如需正式签名，请配置 Repository Variables 中设置 KEYSTORE_BASE64"
+            echo "并在 Repository Secrets 中设置 KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD"
+            echo "HAS_KEYSTORE=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: 🔨 构建 Release APK
+      - name: Build Release APK
         run: |
-          gradle assembleRelease \
-            --no-daemon \
-            --stacktrace \
-            --info
+          gradle assembleRelease --no-daemon --stacktrace --info
         env:
           KEYSTORE_FILE: ${{ steps.prepare_keystore.outputs.KEYSTORE_PATH }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: 📋 列出构建产物
+      - name: Upload Release APK
         if: success()
-        run: |
-          echo "=== APK 文件列表 ==="
-          find app/build/outputs/apk -name "*.apk" -type f
-          echo ""
-          echo "=== APK 文件大小 ==="
-          ls -lh app/build/outputs/apk/release/*.apk
-
-      - name: ✅ 验证 APK 签名
-        if: success() && steps.prepare_keystore.outputs.HAS_KEYSTORE == 'true'
-        run: |
-          # 下载并使用 apksigner 验证
-          echo "=== 验证 Release APK 签名 ==="
-          APK_FILE=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
-          echo "APK 文件: $APK_FILE"
-          keytool -printcert -jarfile "$APK_FILE" || echo "签名验证提示: 如需完整验证请使用 apksigner"
-
-      - name: 📤 上传 Release APK 产物
-        if: success() && (github.event.inputs.upload_artifacts != 'false' || github.event_name != 'workflow_dispatch')
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.APP_NAME }}-Release-APK-${{ github.run_id }}
+          name: ${{ env.APP_NAME }}-Release-APK
           path: app/build/outputs/apk/release/*.apk
           retention-days: 90
           compression-level: 9
 
-      - name: 📊 生成构建摘要 (Summary)
+      - name: Build Summary
         if: success()
         run: |
-          echo "# 🎵 华军音乐 Release 构建完成" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**状态**: ✅ 构建成功" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 构建信息" >> $GITHUB_STEP_SUMMARY
-          echo "- **分支**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **提交**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **工作流**: \`#${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.prepare_keystore.outputs.HAS_KEYSTORE }}" == "true" ]; then
-            echo "- **签名状态**: 🔐 已使用 Release 证书签名" >> $GITHUB_STEP_SUMMARY
+          echo "## Release APK 构建完成" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.prepare_keystore.outputs.HAS_KEYSTORE }}" = "true" ]; then
+            echo "- 签名状态: 已使用正式证书签名" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- **签名状态**: ⚠️  使用默认 debug 签名（未配置正式证书）" >> $GITHUB_STEP_SUMMARY
+            echo "- 签名状态: 使用默认 debug 签名（未配置正式签名密钥）" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 下载产物" >> $GITHUB_STEP_SUMMARY
-          echo "- Release APK: 请查看下方 Artifacts 区域" >> $GITHUB_STEP_SUMMARY
+          echo "- APK 文件已上传至 Artifacts" >> $GITHUB_STEP_SUMMARY
 
   # ==================== 创建 GitHub Release（打 tag 时触发） ====================
   create-release:
@@ -243,59 +162,39 @@ jobs:
       contents: write
 
     steps:
-      - name: 📥 检出代码
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: 📥 下载 Debug APK
+      - name: Download Debug APK
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.APP_NAME }}-Debug-APK-${{ github.run_id }}
+          name: ${{ env.APP_NAME }}-Debug-APK
           path: ./artifacts/debug
 
-      - name: 📥 下载 Release APK
+      - name: Download Release APK
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.APP_NAME }}-Release-APK-${{ github.run_id }}
+          name: ${{ env.APP_NAME }}-Release-APK
           path: ./artifacts/release
 
-      - name: 📋 列出下载的文件
+      - name: Generate Release Notes
         run: |
-          echo "=== 下载的文件 ==="
-          ls -lhR ./artifacts/
+          echo "# 华军音乐 ${{ github.ref_name }} 发布" > release_notes.md
+          echo "" >> release_notes.md
+          echo "## 构建信息" >> release_notes.md
+          echo "- 版本: ${{ github.ref_name }}" >> release_notes.md
+          echo "- 提交: ${{ github.sha }}" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "## 下载" >> release_notes.md
+          echo "- Release 版（已签名）" >> release_notes.md
+          echo "- Debug 版（测试用）" >> release_notes.md
 
-      - name: 📝 生成 Release Notes
-        run: |
-          cat > release_notes.md << 'EOF'
-          # 🎵 华军音乐 ${{ github.ref_name }} 发布
-
-          ## 📦 构建信息
-          - **版本**: ${{ github.ref_name }}
-          - **提交**: ${{ github.sha }}
-          - **构建时间**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-
-          ## 📥 下载
-
-          ### Release 版 (已签名)
-          适合正式安装使用
-
-          ### Debug 版
-          适合开发测试
-
-          ## 🆕 变更说明
-          请查看项目 commit 历史了解本次更新内容。
-          EOF
-          cat release_notes.md
-
-      - name: 🚀 创建 GitHub Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: 华军音乐 ${{ github.ref_name }}
           body_path: release_notes.md
-          draft: false
-          prerelease: false
           files: |
             ./artifacts/release/*.apk
             ./artifacts/debug/*.apk
