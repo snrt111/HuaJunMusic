@@ -8,16 +8,13 @@ pluginManagement {
         maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
-        // 优先从 Google Maven 获取（Android 官方依赖）
         google()
-        // 其次从 Maven Central 获取（Java/Kotlin 生态）
         mavenCentral()
-        // JitPack：Glide 等 GitHub 发布的库
         maven { url 'https://jitpack.io' }
-        // 阿里云镜像：作为备份，在网络环境不稳定时提供备用下载路径
         maven { url 'https://maven.aliyun.com/repository/google' }
         maven { url 'https://maven.aliyun.com/repository/central' }
     }

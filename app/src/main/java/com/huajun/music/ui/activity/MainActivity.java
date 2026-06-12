@@ -41,8 +41,8 @@ public class MainActivity extends AppCompatActivity {
         initMiniPlayer();
         initBottomNav();
 
-        Intent serviceIntent = new Intent(this, com.huajun.music.service.MusicService.class);
-        startService(serviceIntent);
+        // 预初始化音乐服务（通过 PlayManager 延迟启动，避免 targetSdk>=26 时 startService 后台限制）
+        PlayManager.getInstance().init(getApplicationContext());
     }
 
     private void initFragments() {

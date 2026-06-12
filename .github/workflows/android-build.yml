@@ -28,7 +28,9 @@ env:
   APP_NAME: "HuaJunMusic"
   JAVA_VERSION: "17"
   JAVA_DIST: "temurin"
-  GRADLE_OPTS: "-Xmx2048m -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true"
+  ANDROID_COMPILE_SDK: "34"
+  ANDROID_BUILD_TOOLS: "34.0.0"
+  GRADLE_OPTS: "-Xmx2048m -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dkotlin.incremental=false"
 
 jobs:
 
@@ -37,7 +39,7 @@ jobs:
     name: 构建 Debug APK
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.build_type != 'release' }}
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
@@ -51,16 +53,18 @@ jobs:
           cache: 'gradle'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
           cache-write-only: false
           cache-read-only: false
+          gradle-home-cache-cleanup: true
 
-      - name: Build Debug APK
-        run: |
-          chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace --refresh-dependencies --no-build-cache
-        continue-on-error: false
+      - name: 授予 Gradle Wrapper 执行权限
+        run: chmod +x ./gradlew
+
+      - name: 构建 Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace --refresh-dependencies
 
       - name: 上传 Debug APK
         if: success()
@@ -82,7 +86,7 @@ jobs:
     name: 构建 Release APK
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.build_type != 'debug' }}
-    timeout-minutes: 30
+    timeout-minutes: 45
     needs: build-debug
 
     steps:
@@ -97,42 +101,43 @@ jobs:
           cache: 'gradle'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
           cache-write-only: false
           cache-read-only: false
+          gradle-home-cache-cleanup: true
 
-      - name: Prepare signing keystore
+      - name: 授予 Gradle Wrapper 执行权限
+        run: chmod +x ./gradlew
+
+      - name: 准备签名 keystore（如已配置）
         id: prepare_keystore
         env:
           KEYSTORE_BASE64: ${{ vars.KEYSTORE_BASE64 }}
         run: |
-          # 注意：secrets 不能在 if 条件中使用，所以在 step 内部检测
           if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "检测到签名配置 (vars.KEYSTORE_BASE64，使用正式签名"
+            echo "检测到签名配置 vars.KEYSTORE_BASE64，使用正式签名"
             echo "$KEYSTORE_BASE64" | base64 --decode > $RUNNER_TEMP/release-keystore.jks
             KEYSTORE_PATH="$RUNNER_TEMP/release-keystore.jks"
             echo "KEYSTORE_PATH=$KEYSTORE_PATH" >> $GITHUB_OUTPUT
             echo "HAS_KEYSTORE=true" >> $GITHUB_OUTPUT
           else
             echo "未配置签名密钥，Release APK 将使用默认 debug 签名"
-            echo "如需正式签名，请配置 Repository Variables 中设置 KEYSTORE_BASE64"
+            echo "如需正式签名，请在 Repository Variables 中设置 KEYSTORE_BASE64"
             echo "并在 Repository Secrets 中设置 KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD"
             echo "HAS_KEYSTORE=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build Release APK
-        run: |
-          chmod +x ./gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace --refresh-dependencies --no-build-cache
-        continue-on-error: false
+      - name: 构建 Release APK
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
         env:
           KEYSTORE_FILE: ${{ steps.prepare_keystore.outputs.KEYSTORE_PATH }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload Release APK
+      - name: 上传 Release APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
@@ -165,19 +170,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download Debug APK
+      - name: 下载 Debug APK
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.APP_NAME }}-Debug-APK
           path: ./artifacts/debug
 
-      - name: Download Release APK
+      - name: 下载 Release APK
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.APP_NAME }}-Release-APK
           path: ./artifacts/release
 
-      - name: Generate Release Notes
+      - name: 生成 Release Notes
         run: |
           echo "# 华军音乐 ${{ github.ref_name }} 发布" > release_notes.md
           echo "" >> release_notes.md
@@ -189,7 +194,7 @@ jobs:
           echo "- Release 版（已签名）" >> release_notes.md
           echo "- Debug 版（测试用）" >> release_notes.md
 
-      - name: Create GitHub Release
+      - name: 创建 GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}

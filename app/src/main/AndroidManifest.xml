@@ -22,7 +22,8 @@
         android:roundIcon="@mipmap/ic_logo"
         android:supportsRtl="true"
         android:theme="@style/Theme.HuaJunMusic"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        tools:targetApi="31">
 
         <activity
             android:name="com.huajun.music.ui.activity.MainActivity"

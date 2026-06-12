@@ -47,6 +47,7 @@ public class MusicService extends Service {
     public void onCreate() {
         super.onCreate();
         playManager = PlayManager.getInstance();
+        playManager.init(getApplicationContext());
         createNotificationChannel();
 
         receiver = new NotificationReceiver();
@@ -60,6 +61,9 @@ public class MusicService extends Service {
         } else {
             registerReceiver(receiver, filter);
         }
+
+        // 立即显示初始通知（mediaPlayback 前台服务要求 5 秒内启动）
+        startForeground(NOTIFICATION_ID, buildNotification());
 
         playManager.getCurrentSong().observeForever(songObserver);
         playManager.getIsPlaying().observeForever(playingObserver);

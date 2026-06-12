@@ -1,9 +1,11 @@
 package com.huajun.music.manager;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.ComponentName;
+import android.os.Build;
 import android.util.Log;
 
-import androidx.annotation.OptIn;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.media3.common.MediaItem;
@@ -18,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)
 public class PlayManager {
 
     private static final String TAG = "PlayManager";
@@ -26,6 +27,7 @@ public class PlayManager {
 
     private ExoPlayer player;
     private Context context;
+    private boolean initialized = false;
 
     private List<Song> songList = new ArrayList<>();
     private int currentIndex = -1;
@@ -48,6 +50,7 @@ public class PlayManager {
     }
 
     public void init(Context ctx) {
+        if (initialized || ctx == null) return;
         this.context = ctx.getApplicationContext();
         this.player = new ExoPlayer.Builder(this.context).build();
         this.player.addListener(new Player.Listener() {
@@ -63,6 +66,7 @@ public class PlayManager {
                 }
             }
         });
+        initialized = true;
         startPositionMonitor();
     }
 
@@ -129,6 +133,7 @@ public class PlayManager {
             return;
         }
         try {
+            ensureMusicService();
             MediaItem mediaItem = new MediaItem.Builder()
                     .setUri(song.getUrl())
                     .setMediaMetadata(new MediaMetadata.Builder()
@@ -141,6 +146,23 @@ public class PlayManager {
             player.setPlayWhenReady(true);
         } catch (Exception e) {
             Log.e(TAG, "play error: " + e.getMessage());
+        }
+    }
+
+    private void ensureMusicService() {
+        if (context == null) return;
+        try {
+            Intent serviceIntent = new Intent();
+            serviceIntent.setComponent(new ComponentName(
+                    context.getPackageName(),
+                    "com.huajun.music.service.MusicService"));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent);
+            } else {
+                context.startService(serviceIntent);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to start MusicService: " + e.getMessage());
         }
     }
 
