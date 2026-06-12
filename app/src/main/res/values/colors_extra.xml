@@ -1,0 +1,4 @@
+<resources>
+    <color name="bottom_nav_color_default">#80FFFFFF</color>
+    <color name="bottom_nav_color_selected">#E91E63</color>
+</resources>

@@ -1,6 +1,5 @@
 *.iml
 .gradle
-gradle
 .idea
 /local.properties
 /.idea/caches
@@ -17,7 +16,15 @@ gradle
 local.properties
 /.idea/
 /.gradle/
-/gradle/
+
+# Gradle Wrapper: 保留配置文件，忽略二进制JAR
+# gradle-wrapper.properties 必须提交
+/gradle/wrapper/gradle-wrapper.jar
+/gradle/wrapper/gradle-wrapper.jar.sha256
+
+# gradlew 和 gradlew.bat 脚本（可选提交，使用 gradle/actions/setup-gradle 可自动生成）
+# gradlew
+# gradlew.bat
 
 /app/src/main/assets/
 
