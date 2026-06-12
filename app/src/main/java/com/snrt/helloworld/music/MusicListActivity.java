@@ -68,7 +68,7 @@ public class MusicListActivity extends AppCompatActivity {
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         //创建并设置Adapter
-        mAdapter = new MyAdapter(this, this, musics);
+        mAdapter = new MyAdapter(this, musics);
         recyclerView.setAdapter(mAdapter);
     }
 

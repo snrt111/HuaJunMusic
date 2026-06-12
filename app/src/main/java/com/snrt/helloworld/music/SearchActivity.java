@@ -87,7 +87,7 @@ public class SearchActivity extends AppCompatActivity {
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        mAdapter = new MyAdapter(this, this, searchResults);
+        mAdapter = new MyAdapter(this, searchResults);
         recyclerView.setAdapter(mAdapter);
 
         // 设置点击事件

@@ -10,13 +10,10 @@
             android:name="android.permission.READ_CLIPBOARD_IN_BACKGROUND"
             tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission
-            android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/> <!-- 互联网权限 - 如果您使用 MediaPlayer 流式播放基于网络的内容，则您的应用必须申请网络访问权限。 -->
-    <uses-permission
-            android:name="android.permission.INTERNET"/> <!-- 唤醒锁定权限 - 如果播放器应用需要防止屏幕变暗或处理器进入休眠状态，或者要使用 MediaPlayer.setScreenOnWhilePlaying() 或 MediaPlayer.setWakeMode() 方法，则您必须申请此权限 -->
+            android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 

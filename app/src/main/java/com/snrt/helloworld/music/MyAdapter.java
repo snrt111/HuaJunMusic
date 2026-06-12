@@ -19,13 +19,11 @@ import java.util.List;
 
 class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final String TAG = "MyAdapter";
-    private final MusicListActivity musicListActivity;
     Context context;
     List<MusicVO> data;
     OnItemClickListener listener;
 
-    public MyAdapter(MusicListActivity musicListActivity, Context context, List<MusicVO> data) {
-        this.musicListActivity = musicListActivity;
+    public MyAdapter(Context context, List<MusicVO> data) {
         this.context = context;
         this.data = data;
     }
@@ -33,7 +31,7 @@ class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(musicListActivity.getApplicationContext()).inflate(R.layout.music_item, null);
+        View view = LayoutInflater.from(context).inflate(R.layout.music_item, null);
         //引入自定义列表项的资源文件
         MyHolder myHolder = new MyHolder(view);
         return myHolder;
