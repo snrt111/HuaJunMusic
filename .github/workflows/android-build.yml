@@ -56,7 +56,6 @@ jobs:
           gradle-version: '7.5'
           cache-write-only: false
           cache-read-only: false
-          dependency-graph: 'none'
 
       - name: Build Debug APK
         run: |
@@ -102,7 +101,6 @@ jobs:
           gradle-version: '7.5'
           cache-write-only: false
           cache-read-only: false
-          dependency-graph: 'none'
 
       - name: Prepare signing keystore
         id: prepare_keystore
