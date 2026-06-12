@@ -65,16 +65,12 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-
-    buildFeatures {
-        viewBinding true
-    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    // AndroidX Core
+    // ===== AndroidX 核心 UI 框架 =====
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core:1.12.0'
     implementation 'androidx.activity:activity:1.8.2'
@@ -85,37 +81,23 @@ dependencies {
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
 
-    // Material Design 3
+    // ===== Material Design 3 =====
     implementation 'com.google.android.material:material:1.11.0'
 
-    // Glide (图片加载)
+    // ===== 图片加载 (Glide) =====
     implementation 'com.github.bumptech.glide:glide:4.16.0'
 
-    // ExoPlayer / Media3 (播放核心)
+    // ===== Media3 / ExoPlayer (音乐播放核心) =====
     implementation 'androidx.media3:media3-exoplayer:1.2.1'
-    implementation 'androidx.media3:media3-exoplayer-dash:1.2.1'
-    implementation 'androidx.media3:media3-exoplayer-hls:1.2.1'
-    implementation 'androidx.media3:media3-exoplayer-smoothstreaming:1.2.1'
-    implementation 'androidx.media3:media3-ui:1.2.1'
-    implementation 'androidx.media3:media3-session:1.2.1'
     implementation 'androidx.media3:media3-common:1.2.1'
 
-    // Room (本地数据库)
-    implementation 'androidx.room:room-runtime:2.6.1'
-    annotationProcessor 'androidx.room:room-compiler:2.6.1'
-
-    // ViewModel & LiveData
+    // ===== LiveData / Lifecycle (观察模式) =====
     implementation 'androidx.lifecycle:lifecycle-runtime:2.7.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-livedata:2.7.0'
-    implementation 'androidx.lifecycle:lifecycle-service:2.7.0'
 
-    // 网络与JSON
+    // ===== 网络与JSON =====
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-
-    // 工具库
-    implementation 'cn.hutool:hutool-all:5.8.25'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
