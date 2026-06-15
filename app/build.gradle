@@ -16,15 +16,6 @@ android {
         multiDexEnabled true
     }
 
-    // 排除历史遗留代码（com.snrt.helloworld）避免编译错误
-    sourceSets {
-        main {
-            java {
-                exclude 'com/snrt/**'
-            }
-        }
-    }
-
     signingConfigs {
         release {
             def storeFileEnv = System.getenv("KEYSTORE_FILE")
