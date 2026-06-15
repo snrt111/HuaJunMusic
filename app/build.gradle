@@ -16,31 +16,42 @@ android {
         multiDexEnabled true
     }
 
+    // 签名配置：优先使用环境变量（CI 环境），其次使用本地属性文件
     signingConfigs {
-        release {
-            def storeFileEnv = System.getenv("KEYSTORE_FILE")
-            def storePasswordEnv = System.getenv("KEYSTORE_PASSWORD")
-            def keyAliasEnv = System.getenv("KEY_ALIAS")
-            def keyPasswordEnv = System.getenv("KEY_PASSWORD")
+        create("release") {
+            try {
+                def keystoreFile = System.getenv("KEYSTORE_FILE")
+                def keystorePassword = System.getenv("KEYSTORE_PASSWORD")
+                def keyAliasValue = System.getenv("KEY_ALIAS")
+                def keyPasswordValue = System.getenv("KEY_PASSWORD")
 
-            if (storeFileEnv != null && !storeFileEnv.isEmpty()
-                    && storePasswordEnv != null && !storePasswordEnv.isEmpty()
-                    && keyAliasEnv != null && !keyAliasEnv.isEmpty()
-                    && keyPasswordEnv != null && !keyPasswordEnv.isEmpty()) {
-                storeFile file(storeFileEnv)
-                storePassword storePasswordEnv
-                keyAlias keyAliasEnv
-                keyPassword keyPasswordEnv
-            } else {
-                def propsFile = rootProject.file("app/keystore/keystore.properties")
-                if (propsFile.exists()) {
-                    def props = new Properties()
-                    props.load(new FileInputStream(propsFile))
-                    storeFile file(props.getProperty("STORE_FILE"))
-                    storePassword props.getProperty("STORE_PASSWORD")
-                    keyAlias props.getProperty("KEY_ALIAS")
-                    keyPassword props.getProperty("KEY_PASSWORD")
+                if (keystoreFile != null && !keystoreFile.isEmpty()
+                        && new File(keystoreFile).exists()
+                        && keystorePassword != null && !keystorePassword.isEmpty()
+                        && keyAliasValue != null && !keyAliasValue.isEmpty()
+                        && keyPasswordValue != null && !keyPasswordValue.isEmpty()) {
+                    // 使用环境变量配置的签名信息
+                    storeFile = file(keystoreFile)
+                    storePassword = keystorePassword
+                    keyAlias = keyAliasValue
+                    keyPassword = keyPasswordValue
+                } else {
+                    def localPropsFile = rootProject.file("app/keystore/keystore.properties")
+                    if (localPropsFile.exists()) {
+                        // 使用本地 keystore.properties 文件
+                        def localProps = new Properties()
+                        localProps.load(new java.io.FileInputStream(localPropsFile))
+                        storeFile = file(localProps.getProperty("STORE_FILE"))
+                        storePassword = localProps.getProperty("STORE_PASSWORD")
+                        keyAlias = localProps.getProperty("KEY_ALIAS")
+                        keyPassword = localProps.getProperty("KEY_PASSWORD")
+                    }
+                    // 如果既没有环境变量也没有本地文件，则不设置签名信息
+                    // release 构建将使用 debug 签名
                 }
+            } catch (Exception e) {
+                // 签名配置出错时忽略，继续使用默认签名
+                println("签名配置警告: " + e.getMessage())
             }
         }
     }
@@ -53,7 +64,8 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            if (signingConfigs.release.storeFile != null) {
+            // 只有在 release 签名配置有效时才使用它
+            if (signingConfigs.release.storeFile != null && signingConfigs.release.storeFile.exists()) {
                 signingConfig signingConfigs.release
             }
         }
