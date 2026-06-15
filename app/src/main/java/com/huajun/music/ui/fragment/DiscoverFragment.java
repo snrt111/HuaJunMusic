@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -33,7 +33,7 @@ public class DiscoverFragment extends Fragment {
     private RecyclerView rvHotSongs;
     private RecyclerView rvPlaylists;
     private SwipeRefreshLayout refreshLayout;
-    private TextView tvSearch;
+    private LinearLayout searchLayout;
 
     private List<Song> hotSongs = new ArrayList<>();
     private List<Playlist> playlists = new ArrayList<>();
@@ -51,7 +51,7 @@ public class DiscoverFragment extends Fragment {
 
     private void initViews(View view) {
         refreshLayout = view.findViewById(R.id.refresh_layout);
-        tvSearch = view.findViewById(R.id.tv_search);
+        searchLayout = view.findViewById(R.id.tv_search);
         rvHotSongs = view.findViewById(R.id.rv_hot_songs);
         rvPlaylists = view.findViewById(R.id.rv_playlists);
 
@@ -74,7 +74,7 @@ public class DiscoverFragment extends Fragment {
         });
         rvPlaylists.setAdapter(playlistAdapter);
 
-        tvSearch.setOnClickListener(v -> {
+        searchLayout.setOnClickListener(v -> {
             startActivity(new Intent(getContext(), com.huajun.music.ui.activity.SearchActivity.class));
         });
 
