@@ -78,18 +78,25 @@ android {
     }
 }
 
+// ============================================================================
+// 依赖声明（纯 Java 项目）
+//
+// 重要说明：
+//   本项目是一个纯 Java 项目，所有源码文件均为 .java
+//   OkHttp、Media3、Glide 等现代第三方库虽然用 Kotlin 编写，但其发布的 JAR/AAR
+//   对 Java 使用者是透明的，我们通过下面的 constraints 严格控制它们引入的
+//   kotlin-stdlib 版本，确保与 AGP 7.4.2 + compileSdk 33 兼容
+// ============================================================================
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    // 核心库 desugaring（与 AGP 7.4.x + compileSdk 33 兼容）
+    // 核心库 desugaring（Java 8+ API 在较低 Android 版本上的运行时支持）
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 
-    // 注意：不手动引入 kotlin-stdlib，让各依赖自行引入并由 constraints 统一控制版本
-
-    // =====================================================================
+    // ------------------------------------------------------------------------
     // AndroidX 核心 UI（与 AGP 7.4.x + compileSdk 33 兼容的稳定版本）
-    // 重要提示：1.12.0 及更高版本的 androidx.core 要求 compileSdk 34+
-    // =====================================================================
+    //   注意：androidx.core 1.12.0+ 要求 compileSdk 34+，因此锁定在 1.10.1
+    // ------------------------------------------------------------------------
     implementation 'androidx.core:core:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.activity:activity:1.7.0'
@@ -103,62 +110,81 @@ dependencies {
     // Material Design（1.8.0 与 compileSdk 33 兼容）
     implementation 'com.google.android.material:material:1.8.0'
 
-    // Glide 图片加载
+    // Glide 图片加载（Java 友好，内部少量 Kotlin，但发布的 AAR 可在纯 Java 项目使用）
     implementation 'com.github.bumptech.glide:glide:4.16.0'
 
-    // =====================================================================
+    // ------------------------------------------------------------------------
     // Media3 / ExoPlayer（与 AGP 7.4.x + compileSdk 33 兼容）
-    // =====================================================================
+    //   注：Media3 内部用 Kotlin 编写，但提供 Java API，可在纯 Java 项目中使用
+    // ------------------------------------------------------------------------
     implementation 'androidx.media3:media3-exoplayer:1.0.2'
     implementation 'androidx.media3:media3-common:1.0.2'
     implementation 'androidx.media3:media3-session:1.0.2'
 
-    // =====================================================================
+    // ------------------------------------------------------------------------
     // LiveData / Lifecycle（与 AGP 7.4.x + compileSdk 33 兼容）
-    // =====================================================================
+    // ------------------------------------------------------------------------
     implementation 'androidx.lifecycle:lifecycle-runtime:2.5.1'
     implementation 'androidx.lifecycle:lifecycle-livedata:2.5.1'
     implementation 'androidx.lifecycle:lifecycle-common:2.5.1'
 
+    // ------------------------------------------------------------------------
     // 网络与 JSON
+    //   OkHttp 4.x 用 Kotlin 编写，但提供 Java API；使用 4.10.0 而非 4.12.0
+    //   是因为 4.12.0 引入 kotlin-stdlib 1.9.10，与 AGP 7.4.2 的 D8 dexer 不兼容
+    //   （错误：ERROR:D8: com.android.tools.r8.kotlin.H）
+    // ------------------------------------------------------------------------
     implementation 'com.google.code.gson:gson:2.10.1'
-    // 使用 OkHttp 4.10.0 而非 4.12.0：4.12.0 引入 kotlin-stdlib 1.9.10
-    // 与 AGP 7.4.2 的 D8 dexer 不兼容，导致 ERROR:D8: com.android.tools.r8.kotlin.H
-    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation('com.squareup.okhttp3:okhttp:4.10.0') {
+        // 显式排除 -jdk8 变体，让 Gradle 解析出最基本的 kotlin-stdlib 版本
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+    }
 
+    // ------------------------------------------------------------------------
     // 测试依赖
+    // ------------------------------------------------------------------------
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
-    // =====================================================================
-    // 版本一致性强制约束（关键修复）
-    // 1. androidx.core → 1.10.1（1.12.0+ 要求 compileSdk 34）
-    // 2. kotlin-stdlib → 1.8.22（1.9+ 与 AGP 7.4.2 的 D8 dexer 不兼容）
-    // 3. okio → 3.2.0（3.6.0 引入 kotlin-stdlib 1.9.10）
-    // 这些约束确保即便有传递性依赖引入较新版本，也会被强制降级
-    // =====================================================================
+    // ========================================================================
+    // 版本一致性强制约束（关键）
+    //
+    // 作用：以下约束不会新增依赖，但如果在依赖解析过程中出现了这些模块的传递性依赖，
+    //       Gradle 将强制将它们锁定到指定版本。
+    //
+    // 约束目标：
+    //   1. androidx.core → 1.10.1（1.12.0+ 要求 compileSdk 34）
+    //   2. kotlin-stdlib → 1.8.22（1.9+ 与 AGP 7.4.2 的 D8 dexer 不兼容）
+    //   3. okio → 3.2.0（3.4+ 引入 kotlin-stdlib 1.9+）
+    // ========================================================================
     constraints {
-        // androidx.core 版本约束
+        // --- androidx.core 家族 ---
         implementation('androidx.core:core:1.10.1') {
-            because 'androidx.core 1.12.0+ requires compileSdk 34, but we use compileSdk 33'
+            because 'androidx.core 1.12.0+ requires compileSdk 34, but our project targets compileSdk 33'
         }
         implementation('androidx.core:core-ktx:1.10.1') {
-            because 'androidx.core-ktx 1.12.0+ requires compileSdk 34, but we use compileSdk 33'
+            because 'androidx.core-ktx 1.12.0+ requires compileSdk 34, but our project targets compileSdk 33'
         }
 
-        // kotlin-stdlib 版本约束：防止传递性引入 1.9+ 导致 D8 dexing 错误
+        // --- kotlin-stdlib 家族（三方库传递性引入，非本项目主动依赖） ---
         implementation('org.jetbrains.kotlin:kotlin-stdlib:1.8.22') {
-            because 'kotlin-stdlib 1.9+ incompatible with AGP 7.4.2 D8 dexer (ERROR:D8: com.android.tools.r8.kotlin.H)'
+            because 'kotlin-stdlib 1.9+ is incompatible with AGP 7.4.2 D8 dexer (ERROR: com.android.tools.r8.kotlin.H)'
         }
         implementation('org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22') {
-            because 'kotlin-stdlib-jdk8 1.9+ incompatible with AGP 7.4.2 D8 dexer'
+            because 'kotlin-stdlib-jdk8 1.9+ is incompatible with AGP 7.4.2 D8 dexer'
         }
         implementation('org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22') {
-            because 'kotlin-stdlib-jdk7 1.9+ incompatible with AGP 7.4.2 D8 dexer'
+            because 'kotlin-stdlib-jdk7 1.9+ is incompatible with AGP 7.4.2 D8 dexer'
+        }
+        implementation('org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22') {
+            because 'kotlin-stdlib-common 1.9+ is incompatible with AGP 7.4.2 D8 dexer'
+        }
+        implementation('org.jetbrains.kotlin:kotlin-test:1.8.22') {
+            because 'kotlin-test 1.9+ should be aligned with kotlin-stdlib 1.8.22'
         }
 
-        // okio 版本约束：防止传递性引入 3.4+ 导致 kotlin-stdlib 1.9+
+        // --- okio 家族（被 OkHttp 引入，使用 Kotlin 编写） ---
         implementation('com.squareup.okio:okio:3.2.0') {
             because 'okio 3.4+ introduces kotlin-stdlib 1.9+ which is incompatible with AGP 7.4.2'
         }
