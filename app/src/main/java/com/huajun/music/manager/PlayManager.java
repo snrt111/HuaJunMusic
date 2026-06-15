@@ -17,7 +17,6 @@ import com.huajun.music.model.PlayMode;
 import com.huajun.music.model.Song;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class PlayManager {
