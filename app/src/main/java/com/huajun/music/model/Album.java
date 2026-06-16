@@ -18,4 +18,6 @@ public class Album implements Serializable {
 
     public String getPicUrl() { return picUrl; }
     public void setPicUrl(String picUrl) { this.picUrl = picUrl; }
+    
+    public void setCoverUrl(String coverUrl) { this.picUrl = coverUrl; }
 }

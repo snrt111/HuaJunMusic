@@ -182,4 +182,21 @@ public class ApiConfig {
         // 可以从SharedPreferences中读取
         return ALAPI_TOKEN;
     }
+    
+    /**
+     * 构建备用API URL
+     * @param path API路径
+     * @return 完整URL
+     */
+    public static String buildBackupUrl(String path) {
+        return ALAPI_BASE_URL + path;
+    }
+    
+    /**
+     * 获取备用API Token（ALAPI Token）
+     * @return API token
+     */
+    public static String getBackupToken() {
+        return getAlapiToken();
+    }
 }
