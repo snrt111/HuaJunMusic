@@ -50,6 +50,12 @@
             android:exported="false"
             android:theme="@style/Theme.HuaJunMusic"/>
 
+        <activity
+            android:name="com.huajun.music.ui.activity.ApiSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.HuaJunMusic"
+            android:label="API设置"/>
+
         <service
             android:name="com.huajun.music.service.MusicService"
             android:exported="false"

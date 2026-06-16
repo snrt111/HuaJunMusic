@@ -15,6 +15,10 @@ public class Song implements Serializable {
     private String lyric;
     private Long size;
     private String quality;
+    
+    // 酷狗音乐API专用字段
+    private String hash;      // 歌曲hash值，用于获取播放URL
+    private String albumId;   // 专辑ID，用于获取播放URL
 
     public Song() {}
 
@@ -51,6 +55,13 @@ public class Song implements Serializable {
 
     public String getQuality() { return quality; }
     public void setQuality(String quality) { this.quality = quality; }
+
+    // 酷狗音乐API专用方法
+    public String getHash() { return hash; }
+    public void setHash(String hash) { this.hash = hash; }
+
+    public String getAlbumId() { return albumId; }
+    public void setAlbumId(String albumId) { this.albumId = albumId; }
 
     public String getArtistName() {
         if (artists == null || artists.isEmpty()) return "未知歌手";

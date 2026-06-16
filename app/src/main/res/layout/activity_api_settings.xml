@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- 标题 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="API设置"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:paddingBottom="16dp"/>
+
+    <!-- 当前API状态 -->
+    <TextView
+        android:id="@+id/tv_current_api_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="当前API: NetEase (网易云音乐)"
+        android:textSize="14sp"
+        android:textColor="@color/primary"
+        android:paddingBottom="16dp"/>
+
+    <!-- API选择 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="选择API提供商"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:paddingBottom="8dp"/>
+
+    <RadioGroup
+        android:id="@+id/rg_api_selector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card"
+        android:padding="8dp">
+
+        <RadioButton
+            android:id="@+id/rb_netease"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="网易云音乐API"
+            android:textSize="14sp"
+            android:padding="12dp"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/rb_kugou"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="酷狗音乐API"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+        <RadioButton
+            android:id="@+id/rb_alapi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ALAPI (需要Token)"
+            android:textSize="14sp"
+            android:padding="12dp"/>
+
+    </RadioGroup>
+
+    <!-- ALAPI Token设置 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ALAPI Token"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/et_alapi_token"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="请输入ALAPI Token（选择ALAPI时必填）"
+        android:inputType="text"
+        android:padding="12dp"
+        android:background="@drawable/bg_card"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="获取Token: 关注公众号\"Alone88\""
+        android:textSize="12sp"
+        android:textColor="@android:color/darker_gray"
+        android:paddingBottom="8dp"/>
+
+    <!-- 自动切换开关 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="自动切换API"
+            android:textSize="14sp"/>
+
+        <Switch
+            android:id="@+id/switch_auto_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"/>
+    </LinearLayout>
+
+    <!-- 按钮区域 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="16dp">
+
+        <Button
+            android:id="@+id/btn_test_api"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="测试API"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_primary_button"
+            android:textColor="@android:color/white"/>
+
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="保存设置"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_primary_button"
+            android:textColor="@android:color/white"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_reset_to_netease"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="重置到网易云音乐API"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_circle_button"
+        android:textColor="@color/text_primary"/>
+
+    <!-- 说明信息 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="说明:\n\n1. 网易云音乐API: 功能完整，但可能不稳定\n2. 酷狗音乐API: 无需token，稳定性较好\n3. ALAPI: 需要token，企业级稳定性\n4. 开启自动切换后，当前API失败会自动尝试其他API"
+        android:textSize="12sp"
+        android:textColor="@android:color/darker_gray"
+        android:paddingTop="16dp"
+        android:lineSpacingExtra="4dp"/>
+
+</LinearLayout>

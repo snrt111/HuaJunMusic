@@ -61,24 +61,124 @@ public class MusicApi {
     public void searchSongs(final String keyword, final int limit, final Callback<List<Song>> callback) {
         new Thread(() -> {
             try {
-                String url = ApiConfig.buildUrl("/cloudsearch") + "?keywords=" + keyword + "&limit=" + limit;
-                String resp = get(url);
-                JSONObject obj = new JSONObject(resp);
-                List<Song> songs = new ArrayList<>();
-                if (obj.has("result")) {
-                    JSONObject result = obj.getJSONObject("result");
-                    if (result.has("songs")) {
-                        JSONArray arr = result.getJSONArray("songs");
-                        songs = parseSongs(arr);
-                        fetchSongUrls(songs);
-                    }
-                }
+                List<Song> songs = searchSongsInternal(keyword, limit);
                 if (callback != null) callback.onSuccess(songs);
             } catch (Exception e) {
                 Log.e(TAG, "searchSongs error: " + e.getMessage());
-                if (callback != null) callback.onError(e.getMessage());
+                handleApiError(e, keyword, limit, callback);
             }
         }).start();
+    }
+
+    /**
+     * 内部搜索方法，支持重试和切换
+     */
+    private List<Song> searchSongsInternal(String keyword, int limit) throws Exception {
+        ApiConfig.ApiType currentApiType = ApiConfig.getCurrentApiType();
+        
+        try {
+            switch (currentApiType) {
+                case ALAPI:
+                    // 使用ALAPI
+                    return AlapiAdapter.getInstance().searchSongs(keyword, limit);
+                case KUGOU:
+                    // 使用酷狗音乐API
+                    return KugouAdapter.getInstance().searchSongs(keyword, limit);
+                default:
+                    // 使用网易云音乐API
+                    String url = ApiConfig.NETEASE_BASE_URL + "/cloudsearch?keywords=" + keyword + "&limit=" + limit;
+                    String resp = get(url);
+                    JSONObject obj = new JSONObject(resp);
+                    List<Song> songs = new ArrayList<>();
+                    
+                    if (obj.has("result")) {
+                        JSONObject result = obj.getJSONObject("result");
+                        if (result.has("songs")) {
+                            JSONArray arr = result.getJSONArray("songs");
+                            songs = parseSongs(arr);
+                            fetchSongUrls(songs);
+                        }
+                    }
+                    return songs;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "API调用失败: " + ApiConfig.getCurrentApiName() + ", 错误: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * 处理API错误，尝试切换到备用API
+     */
+    private void handleApiError(Exception error, String keyword, int limit, Callback<List<Song>> callback) {
+        if (!ApiConfig.isAutoSwitchEnabled()) {
+            if (callback != null) callback.onError(error.getMessage());
+            return;
+        }
+
+        // 如果已经超过最大重试次数，直接返回错误
+        if (ApiConfig.incrementRetry()) {
+            Log.e(TAG, "超过最大重试次数，放弃重试");
+            if (callback != null) callback.onError(error.getMessage());
+            ApiConfig.resetRetryCount();
+            return;
+        }
+
+        // 尝试切换API
+        ApiConfig.ApiType currentApiType = ApiConfig.getCurrentApiType();
+        switch (currentApiType) {
+            case NETEASE:
+                // 网易云失败，尝试酷狗
+                Log.w(TAG, "网易云API失败，切换到酷狗API");
+                ApiConfig.switchToKugou();
+                break;
+            case KUGOU:
+                // 酷狗失败，尝试ALAPI
+                Log.w(TAG, "酷狗API失败，切换到ALAPI");
+                ApiConfig.switchToAlapi();
+                break;
+            case ALAPI:
+                // ALAPI失败，尝试网易云
+                Log.w(TAG, "ALAPI失败，切换到网易云API");
+                ApiConfig.switchToNetease();
+                break;
+        }
+
+        // 检查新API是否可用
+        boolean available = isCurrentApiAvailable();
+        if (!available) {
+            Log.e(TAG, "切换后的API不可用");
+            // 继续尝试下一个API
+            handleApiError(error, keyword, limit, callback);
+            return;
+        }
+
+        // 重试请求
+        try {
+            List<Song> songs = searchSongsInternal(keyword, limit);
+            Log.i(TAG, "切换API后调用成功: " + ApiConfig.getCurrentApiName());
+            if (callback != null) callback.onSuccess(songs);
+        } catch (Exception e) {
+            Log.e(TAG, "切换API后仍失败: " + e.getMessage());
+            // 继续尝试下一个API
+            handleApiError(e, keyword, limit, callback);
+        }
+    }
+
+    /**
+     * 检查当前API是否可用
+     */
+    private boolean isCurrentApiAvailable() {
+        ApiConfig.ApiType currentApiType = ApiConfig.getCurrentApiType();
+        switch (currentApiType) {
+            case ALAPI:
+                return AlapiAdapter.getInstance().isAvailable();
+            case KUGOU:
+                return KugouAdapter.getInstance().isAvailable();
+            default:
+                // 网易云API默认认为可用
+                return true;
+        }
     }
 
     public void getTopSongs(final int limit, final Callback<List<Song>> callback) {
